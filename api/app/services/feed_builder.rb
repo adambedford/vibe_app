@@ -69,16 +69,85 @@ class FeedBuilder
   def self.cold_start_boost(app)
     return 1.0 if app.play_count >= 10
     return 1.0 if app.created_at < 6.hours.ago
+
+    # Early bounce penalty — if first plays show <5s median, kill the boost
+    if app.play_count >= 3
+      median_duration = app.play_sessions.order(:created_at).limit(10).pluck(:duration_seconds).sort
+      mid = median_duration.length / 2
+      median = median_duration.length.odd? ? median_duration[mid] : (median_duration[mid - 1].to_f + median_duration[mid].to_f) / 2
+      return 0.5 if median < 5
+    end
+
     2.0
   end
 
   def self.fetch_candidates(user)
     following_ids = user.following_ids
+    candidates = {}
 
-    App.published
-       .where("apps.created_at > ?", 7.days.ago)
-       .includes(:creator, :current_version, :quality_score)
-       .limit(200)
+    # Source 1: Following — apps by creators the user follows (last 7 days)
+    candidates[:following] = App.published
+      .where(creator_id: following_ids)
+      .where("apps.created_at > ?", 7.days.ago)
+      .includes(:creator, :current_version, :quality_score)
+      .limit(CANDIDATE_LIMITS[:following])
+      .to_a
+
+    # Source 2: Social proof — apps liked or remixed by people the user follows (last 3 days)
+    liked_app_ids = Like.where(user_id: following_ids)
+      .where("created_at > ?", 3.days.ago)
+      .pluck(:app_id)
+    remixed_app_ids = App.published
+      .where(creator_id: following_ids)
+      .where.not(parent_id: nil)
+      .where("apps.created_at > ?", 3.days.ago)
+      .pluck(:parent_id)
+    social_proof_ids = (liked_app_ids + remixed_app_ids).uniq
+    candidates[:social_proof] = App.published
+      .where(id: social_proof_ids)
+      .includes(:creator, :current_version, :quality_score)
+      .limit(CANDIDATE_LIMITS[:social_proof])
+      .to_a
+
+    # Source 3: Trending — top apps by quality score globally (last 48 hours)
+    candidates[:trending] = App.published
+      .where("apps.created_at > ?", 48.hours.ago)
+      .joins("LEFT JOIN app_quality_scores ON app_quality_scores.app_id = apps.id")
+      .order("app_quality_scores.composite_score DESC NULLS LAST")
+      .includes(:creator, :current_version, :quality_score)
+      .limit(CANDIDATE_LIMITS[:trending])
+      .to_a
+
+    # Source 4: New creator boost — apps by creators with <100 total plays (last 24 hours)
+    candidates[:new_creator] = App.published
+      .where("apps.created_at > ?", 24.hours.ago)
+      .joins(:creator)
+      .where("(SELECT COALESCE(SUM(play_count), 0) FROM apps a2 WHERE a2.creator_id = apps.creator_id) < 100")
+      .includes(:creator, :current_version, :quality_score)
+      .limit(CANDIDATE_LIMITS[:new_creator])
+      .to_a
+
+    # Source 5: Category backfill — apps from categories the user has played most (last 7 days)
+    top_categories = PlaySession.where(user_id: user.id)
+      .joins(:app)
+      .where("play_sessions.created_at > ?", 30.days.ago)
+      .group("apps.category")
+      .order(Arel.sql("count(*) DESC"))
+      .limit(3)
+      .pluck(Arel.sql("apps.category"))
+      .compact
+    if top_categories.any?
+      candidates[:category_backfill] = App.published
+        .where(category: top_categories)
+        .where("apps.created_at > ?", 7.days.ago)
+        .includes(:creator, :current_version, :quality_score)
+        .limit(CANDIDATE_LIMITS[:category_backfill])
+        .to_a
+    end
+
+    # Union and deduplicate
+    all = candidates.values.flatten
+    all.uniq(&:id).first(200)
   end
 
   def self.apply_diversity(ranked_apps)
