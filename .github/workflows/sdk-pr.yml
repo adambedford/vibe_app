@@ -1,0 +1,19 @@
+name: SDK PR Checks
+on:
+  pull_request:
+    paths: ['packages/vibe-sdk/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/vibe-sdk/package-lock.json
+      - run: npm ci
+        working-directory: packages/vibe-sdk
+      - run: npm test
+        working-directory: packages/vibe-sdk

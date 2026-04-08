@@ -1,0 +1,62 @@
+name: API PR Checks
+on:
+  pull_request:
+    paths: ['api/**']
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          working-directory: api
+      - run: bundle exec rubocop
+        working-directory: api
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: vibe_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          working-directory: api
+      - name: Setup DB
+        run: bundle exec rails db:schema:load
+        working-directory: api
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/vibe_test
+          RAILS_ENV: test
+      - name: Run RSpec
+        run: bundle exec rspec --format documentation
+        working-directory: api
+        env:
+          DATABASE_URL: postgres://postgres:test@localhost:5432/vibe_test
+          RAILS_ENV: test
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          working-directory: api
+      - run: bundle exec brakeman --no-pager
+        working-directory: api
+      - run: bundle exec bundler-audit check --update
+        working-directory: api

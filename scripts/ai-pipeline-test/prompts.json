@@ -1,0 +1,60 @@
+[
+  {
+    "id": "smoke_01",
+    "prompt": "make a simple clicker game",
+    "expected": { "renders": true, "has_interactive_elements": true },
+    "category": "game",
+    "complexity": "simple"
+  },
+  {
+    "id": "smoke_02",
+    "prompt": "create a choose your own adventure story about a detective",
+    "expected": { "renders": true, "has_text_content": true, "has_interactive_elements": true },
+    "category": "story",
+    "complexity": "medium"
+  },
+  {
+    "id": "smoke_03",
+    "prompt": "make a pixel art drawing tool",
+    "expected": { "renders": true, "has_canvas_or_grid": true },
+    "category": "art_tool",
+    "complexity": "medium"
+  },
+  {
+    "id": "smoke_04",
+    "prompt": "build a two-player tic tac toe game",
+    "expected": { "renders": true, "uses_vibe_sdk": true },
+    "category": "game",
+    "complexity": "medium",
+    "is_multiplayer": true
+  },
+  {
+    "id": "smoke_05",
+    "prompt": "create a pomodoro timer with a clean minimal design",
+    "expected": { "renders": true, "has_interactive_elements": true },
+    "category": "utility",
+    "complexity": "simple"
+  },
+  {
+    "id": "smoke_06",
+    "prompt": "make a space shooter with neon graphics, boss battles every 5 levels, and power-ups",
+    "expected": { "renders": true, "has_canvas_or_animation": true },
+    "category": "game",
+    "complexity": "complex"
+  },
+  {
+    "id": "smoke_07",
+    "prompt": "create a quiz app about world geography with 15 questions",
+    "expected": { "renders": true, "has_text_content": true, "has_interactive_elements": true },
+    "category": "utility",
+    "complexity": "medium"
+  },
+  {
+    "id": "smoke_08",
+    "prompt": "make a collaborative drawing canvas where multiple people can draw at the same time",
+    "expected": { "renders": true, "uses_vibe_sdk": true, "has_canvas_or_grid": true },
+    "category": "art_tool",
+    "complexity": "complex",
+    "is_multiplayer": true
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rails-api",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "export PATH=$HOME/.rvm/rubies/ruby-3.4.1/bin:$HOME/.rvm/gems/ruby-3.4.1/bin:$PATH && export GEM_HOME=$HOME/.rvm/gems/ruby-3.4.1 && export GEM_PATH=$HOME/.rvm/gems/ruby-3.4.1:$HOME/.rvm/gems/ruby-3.4.1@global && cd api && bin/rails server -p $PORT -b 0.0.0.0"],
+      "port": 3000
+    }
+  ]
+}
