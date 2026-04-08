@@ -28,7 +28,7 @@ export default function RegisterScreen() {
         date_of_birth: dateOfBirth,
       });
       setAuth(res.data.user, res.data.tokens.access_token, res.data.tokens.refresh_token);
-      router.back();
+      router.replace('/auth/profile-setup');
     } catch (e: any) {
       setError(e.message || 'Registration failed');
     } finally {

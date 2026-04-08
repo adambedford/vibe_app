@@ -47,3 +47,17 @@ jobs:
           service: vibe-api
       - name: Health check
         run: curl --fail --retry 5 --retry-delay 10 ${{ secrets.STAGING_API_URL }}/up
+
+  mobile-preview:
+    needs: [api-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+        working-directory: apps/mobile
+      - run: eas build --platform all --profile preview --non-interactive
+        working-directory: apps/mobile

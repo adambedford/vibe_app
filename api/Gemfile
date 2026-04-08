@@ -18,8 +18,12 @@ gem "jwt"
 gem "rack-attack"
 gem "rack-cors"
 
+# Analytics
+gem "amplitude-api"
+
 # AI & Cloud
 gem "aws-sdk-bedrockruntime"
+gem "aws-sdk-rekognition"
 gem "google-cloud-storage"
 gem "httparty"
 

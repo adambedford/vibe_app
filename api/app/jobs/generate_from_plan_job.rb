@@ -30,6 +30,9 @@ class GenerateFromPlanJob < ApplicationJob
     else
       session.update!(status: "failed")
       firebase.update_status(session.id, status: "failed", error: "Generation failed after #{MAX_FIX_PASSES} fix attempts")
+      AnalyticsTracker.track_generation(user_id: session.user_id, session_id: session.id,
+        duration_seconds: ((Time.current - session.created_at) rescue 0).to_i,
+        cost_usd: session.generation_cost || 0, fix_passes: session.fix_passes, success: false)
     end
   end
 
@@ -51,10 +54,14 @@ class GenerateFromPlanJob < ApplicationJob
       screenshot: screenshot_b64
     )
 
+    duration = ((Time.current - session.created_at) rescue 0).to_i
+
     if content_check.safe?
       session.app.update!(current_version_id: version.id)
       session.update!(generated_version_id: version.id, status: "completed", generation_cost: 0.30)
       firebase.update_status(session.id, status: "complete", progress: 100, result_url: url)
+      AnalyticsTracker.track_generation(user_id: session.user_id, session_id: session.id,
+        duration_seconds: duration, cost_usd: 0.30, fix_passes: session.fix_passes, success: true)
     else
       session.update!(generated_version_id: version.id, status: "under_review", generation_cost: 0.30)
       firebase.update_status(session.id, status: "under_review", progress: 100)

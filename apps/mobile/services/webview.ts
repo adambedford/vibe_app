@@ -169,3 +169,17 @@ export function stripCDNTags(html: string): string {
   // Development: keep CDN tags so Phaser/Tone load from network
   return html;
 }
+
+/**
+ * Inject Content Security Policy into app HTML.
+ * Restricts network access to Vibe SDK endpoints only.
+ */
+export function injectCSP(html: string): string {
+  const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src wss://*.vibe.app https://api.vibe.app; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';">`;
+
+  // Insert CSP meta tag after <head>
+  if (html.includes('<head>')) {
+    return html.replace('<head>', `<head>\n${csp}`);
+  }
+  return html;
+}

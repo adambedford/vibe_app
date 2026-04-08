@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { useAuthStore } from '@/stores/authStore';
+import { initAnalytics, identify, trackAppOpened } from '@/services/analytics';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -33,6 +35,15 @@ export default function RootLayout() {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
 
+  useEffect(() => {
+    initAnalytics();
+    trackAppOpened('organic');
+    useAuthStore.getState().loadFromStorage().then(() => {
+      const user = useAuthStore.getState().user;
+      if (user) identify(String(user.id), { username: user.username });
+    });
+  }, []);
+
   if (!loaded) return null;
 
   return <RootLayoutNav />;
@@ -50,6 +61,7 @@ function RootLayoutNav() {
           <Stack.Screen name="profile/[id]" options={{ title: 'Profile' }} />
           <Stack.Screen name="auth/login" options={{ presentation: 'modal', title: 'Sign In' }} />
           <Stack.Screen name="auth/register" options={{ presentation: 'modal', title: 'Sign Up' }} />
+          <Stack.Screen name="auth/profile-setup" options={{ presentation: 'modal', title: 'Profile Setup' }} />
           <Stack.Screen name="remix/[id]" options={{ title: 'Remix' }} />
         </Stack>
       </ThemeProvider>

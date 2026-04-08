@@ -74,6 +74,7 @@ module Api
           category: record.enhanced_prompt&.match(/APP_TYPE:\s*(\w+)/)&.captures&.first
         )
 
+        AnalyticsTracker.track_publish(user_id: current_user.id, app_id: app.id, session_id: record.id)
         render_resource(app, presenter: AppPresenter)
       end
 

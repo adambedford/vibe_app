@@ -7,7 +7,8 @@ import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { Text, View } from '@/components/Themed';
 import { apps } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
-import { getInjectedSDK, stripCDNTags } from '@/services/webview';
+import { getInjectedSDK, stripCDNTags, injectCSP } from '@/services/webview';
+import { trackAppPlayed, trackAppPlayDuration } from '@/services/analytics';
 
 export default function AppPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,7 +43,8 @@ export default function AppPlayerScreen() {
       .then((res) => res.text())
       .then((html) => {
         const stripped = stripCDNTags(html);
-        setHtmlContent(stripped);
+        const withCSP = injectCSP(stripped);
+        setHtmlContent(withCSP);
       })
       .catch(() => setHtmlContent(null));
   }, [data?.data?.bundle_url]);

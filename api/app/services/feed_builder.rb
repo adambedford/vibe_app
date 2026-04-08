@@ -51,9 +51,19 @@ class FeedBuilder
   def self.social_multiplier(app, user)
     if user.following_ids.include?(app.creator_id)
       1.5
+    elsif socially_endorsed?(app, user)
+      1.2
     else
       1.0
     end
+  end
+
+  def self.socially_endorsed?(app, user)
+    following_ids = user.following_ids
+    return false if following_ids.empty?
+
+    Like.where(app_id: app.id, user_id: following_ids).exists? ||
+      App.where(parent_id: app.id, creator_id: following_ids).exists?
   end
 
   def self.cold_start_boost(app)
