@@ -41,7 +41,8 @@ RSpec.describe FeedBuilder do
       create(:play_session, app: app, user: user, duration_seconds: 1)
       create(:play_session, app: app, user: user, duration_seconds: 3)
 
-      expect(described_class.cold_start_boost(app)).to eq(0.5)
+      medians = described_class.preload_early_medians([ app.id ])
+      expect(described_class.cold_start_boost(app, medians)).to eq(0.5)
     end
 
     it "keeps boost when early plays have good duration" do
@@ -51,7 +52,8 @@ RSpec.describe FeedBuilder do
       create(:play_session, app: app, user: user, duration_seconds: 45)
       create(:play_session, app: app, user: user, duration_seconds: 20)
 
-      expect(described_class.cold_start_boost(app)).to eq(2.0)
+      medians = described_class.preload_early_medians([ app.id ])
+      expect(described_class.cold_start_boost(app, medians)).to eq(2.0)
     end
   end
 
@@ -64,18 +66,21 @@ RSpec.describe FeedBuilder do
 
     it "returns 1.5 for apps by followed creators" do
       app = build(:app, creator: followed_creator)
-      expect(described_class.social_multiplier(app, user)).to eq(1.5)
+      following_set = user.following_ids.to_set
+      expect(described_class.social_multiplier(app, following_set)).to eq(1.5)
     end
 
     it "returns 1.2 for apps liked by followed users" do
       app = create(:app, :published, creator: stranger)
       create(:like, user: followed_creator, app: app)
-      expect(described_class.social_multiplier(app, user)).to eq(1.2)
+      following_set = user.following_ids.to_set
+      expect(described_class.social_multiplier(app, following_set)).to eq(1.2)
     end
 
     it "returns 1.0 for apps by strangers with no social proof" do
       app = build(:app, creator: stranger)
-      expect(described_class.social_multiplier(app, user)).to eq(1.0)
+      following_set = user.following_ids.to_set
+      expect(described_class.social_multiplier(app, following_set)).to eq(1.0)
     end
   end
 

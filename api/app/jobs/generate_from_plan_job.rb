@@ -1,5 +1,7 @@
 class GenerateFromPlanJob < ApplicationJob
   queue_as :generation
+  retry_on StandardError, wait: :polynomially_longer, attempts: 2
+  discard_on ActiveRecord::RecordNotFound
   MAX_FIX_PASSES = 3
 
   def perform(session_id)

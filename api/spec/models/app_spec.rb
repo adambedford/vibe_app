@@ -16,7 +16,7 @@ RSpec.describe App, type: :model do
 
   describe "validations" do
     it { is_expected.to validate_presence_of(:title) }
-    it { is_expected.to validate_inclusion_of(:status).in_array(%w[draft published under_review removed]) }
+    it { is_expected.to define_enum_for(:status).backed_by_column_of_type(:string).with_values(draft: "draft", published: "published", under_review: "under_review", removed: "removed") }
   end
 
   describe "scopes" do

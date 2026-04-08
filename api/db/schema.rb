@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_171125) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -86,7 +86,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
     t.string "status", default: "draft", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["category", "status"], name: "index_apps_on_category_and_status"
     t.index ["created_at"], name: "index_apps_on_created_at"
+    t.index ["creator_id", "status"], name: "index_apps_on_creator_id_and_status"
     t.index ["creator_id"], name: "index_apps_on_creator_id"
     t.index ["current_version_id"], name: "index_apps_on_current_version_id"
     t.index ["parent_id"], name: "index_apps_on_parent_id"
@@ -163,6 +165,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["app_id", "created_at"], name: "index_likes_on_app_id_and_created_at"
     t.index ["app_id"], name: "index_likes_on_app_id"
     t.index ["user_id", "app_id"], name: "index_likes_on_user_id_and_app_id", unique: true
     t.index ["user_id"], name: "index_likes_on_user_id"
@@ -174,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
     t.bigint "multiplayer_session_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["multiplayer_session_id", "user_id"], name: "idx_multiplayer_players_unique", unique: true
     t.index ["multiplayer_session_id"], name: "index_multiplayer_players_on_multiplayer_session_id"
     t.index ["user_id"], name: "index_multiplayer_players_on_user_id"
   end
@@ -212,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
     t.integer "duration_seconds", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["app_id", "created_at"], name: "index_play_sessions_on_app_id_and_created_at"
     t.index ["app_id"], name: "index_play_sessions_on_app_id"
     t.index ["user_id", "app_id"], name: "index_play_sessions_on_user_id_and_app_id"
     t.index ["user_id"], name: "index_play_sessions_on_user_id"
@@ -235,6 +240,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
     t.integer "score"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["app_id", "score", "created_at"], name: "idx_scoreboard_leaderboard", order: { score: :desc }
     t.index ["app_id"], name: "index_scoreboard_entries_on_app_id"
     t.index ["user_id"], name: "index_scoreboard_entries_on_user_id"
   end

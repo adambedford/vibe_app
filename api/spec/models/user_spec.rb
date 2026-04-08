@@ -22,7 +22,7 @@ RSpec.describe User, type: :model do
     it { is_expected.to validate_uniqueness_of(:username) }
     it { is_expected.to validate_presence_of(:display_name) }
     it { is_expected.to validate_presence_of(:date_of_birth) }
-    it { is_expected.to validate_inclusion_of(:status).in_array(%w[active pending_deletion deleted]) }
+    it { is_expected.to define_enum_for(:status).backed_by_column_of_type(:string).with_values(active: "active", pending_deletion: "pending_deletion", deleted: "deleted") }
     it { is_expected.to have_secure_password }
 
     it "rejects users under 16" do

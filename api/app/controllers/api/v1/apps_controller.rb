@@ -82,15 +82,17 @@ module Api
       end
 
       def remix
-        app = App.create!(
-          creator: current_user,
-          title: "Remix of #{record.title}",
-          status: "draft",
-          parent: record,
-          root: record.root || record,
-          category: record.category
-        )
-        session = CreationSession.create!(user: current_user, app: app, source_app: record, status: "active")
+        session = ApplicationRecord.transaction do
+          app = App.create!(
+            creator: current_user,
+            title: "Remix of #{record.title}",
+            status: "draft",
+            parent: record,
+            root: record.root || record,
+            category: record.category
+          )
+          CreationSession.create!(user: current_user, app: app, source_app: record, status: "active")
+        end
         render_resource(session, presenter: CreationSessionPresenter, status: :created)
       end
 

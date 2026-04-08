@@ -10,18 +10,16 @@ class App < ApplicationRecord
   has_many :bookmarks, dependent: :destroy
   has_many :play_sessions, dependent: :destroy
   has_many :remixes, class_name: "App", foreign_key: :parent_id
+  has_many :creation_sessions, dependent: :destroy
   has_many :scoreboard_entries, dependent: :destroy
   has_many :multiplayer_sessions, dependent: :destroy
   has_many :reports, dependent: :destroy
   has_one :quality_score, class_name: "AppQualityScore", dependent: :destroy
 
+  enum :status, { draft: "draft", published: "published", under_review: "under_review", removed: "removed" }, default: :draft
+
   validates :title, presence: true
-  validates :status, inclusion: { in: %w[draft published under_review removed] }
 
   scope :published, -> { where(status: "published") }
   scope :drafts, -> { where(status: "draft") }
-
-  def bundle_html
-    current_version&.bundle_url
-  end
 end

@@ -16,8 +16,8 @@ class AppPresenter < ApplicationPresenter
       comment_count: object.comment_count,
       creator: UserPresenter.new(object.creator, options).as_json_compact,
       parent: object.parent ? { id: object.parent_id, title: object.parent.title } : nil,
-      is_liked: current_user ? Like.exists?(user_id: current_user.id, app_id: object.id) : nil,
-      is_saved: current_user ? Bookmark.exists?(user_id: current_user.id, app_id: object.id) : nil,
+      is_liked: liked?,
+      is_saved: saved?,
       is_mine: current_user&.id == object.creator_id,
       status: object.status,
       version_id: object.current_version_id,
@@ -38,9 +38,30 @@ class AppPresenter < ApplicationPresenter
       like_count: object.like_count,
       remix_count: object.remix_count,
       creator: UserPresenter.new(object.creator, options).as_json_compact,
-      is_liked: current_user ? Like.exists?(user_id: current_user.id, app_id: object.id) : nil,
-      is_saved: current_user ? Bookmark.exists?(user_id: current_user.id, app_id: object.id) : nil,
+      is_liked: liked?,
+      is_saved: saved?,
       created_at: fmt(object.created_at)
     }
+  end
+
+  private
+
+  # Use batch-loaded sets from Renderable if available, fall back to query
+  def liked?
+    return nil unless current_user
+    if options[:liked_app_ids]
+      options[:liked_app_ids].include?(object.id)
+    else
+      Like.exists?(user_id: current_user.id, app_id: object.id)
+    end
+  end
+
+  def saved?
+    return nil unless current_user
+    if options[:saved_app_ids]
+      options[:saved_app_ids].include?(object.id)
+    else
+      Bookmark.exists?(user_id: current_user.id, app_id: object.id)
+    end
   end
 end

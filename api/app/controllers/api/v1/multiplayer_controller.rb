@@ -3,15 +3,18 @@ module Api
     class MultiplayerController < BaseController
       def create
         app = App.find(params.require(:app_id))
-        session = MultiplayerSession.create!(
-          app: app,
-          host_user: current_user,
-          status: "lobby",
-          max_players: params[:max_players] || 4,
-          firebase_path: "/multiplayer/#{SecureRandom.hex}"
-        )
-        MultiplayerPlayer.create!(multiplayer_session: session, user: current_user, is_host: true)
-        render json: { data: { id: session.id, lobby_id: session.id, firebase_path: session.firebase_path, status: session.status } }, status: :created
+
+        ApplicationRecord.transaction do
+          session = MultiplayerSession.create!(
+            app: app,
+            host_user: current_user,
+            max_players: params[:max_players] || 4,
+            firebase_path: "/multiplayer/#{SecureRandom.hex}"
+          )
+          MultiplayerPlayer.create!(multiplayer_session: session, user: current_user, is_host: true)
+
+          render json: { data: { id: session.id, lobby_id: session.id, firebase_path: session.firebase_path, status: session.status } }, status: :created
+        end
       end
 
       def show
@@ -29,7 +32,7 @@ module Api
       end
 
       def join
-        session = MultiplayerSession.find(params[:id])
+        session = MultiplayerSession.lock.find(params[:id])
 
         if session.multiplayer_players.count >= session.max_players
           return render_error("lobby_full", "Lobby is full", status: :unprocessable_entity)

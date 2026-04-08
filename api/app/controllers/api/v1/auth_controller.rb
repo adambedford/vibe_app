@@ -55,6 +55,7 @@ module Api
       def refresh
         secret = Rails.application.credentials.jwt_secret || "test-secret"
         payload = JWT.decode(params.require(:refresh_token), secret, true, algorithm: "HS256").first
+        return render_error("unauthorized", "Invalid token type", status: :unauthorized) unless payload["type"] == "refresh"
         user = User.find(payload["sub"])
         tokens = generate_tokens(user)
         render json: { data: tokens }
@@ -134,7 +135,7 @@ module Api
         base = "user" if base.blank?
         candidate = base
         counter = 1
-        while User.exists?(username: candidate)
+        while User.exists?(username: candidate) && counter < 1000
           candidate = "#{base}#{counter}"
           counter += 1
         end

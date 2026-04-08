@@ -10,6 +10,6 @@ RSpec.describe MultiplayerSession, type: :model do
 
   describe "validations" do
     it { is_expected.to validate_presence_of(:firebase_path) }
-    it { is_expected.to validate_inclusion_of(:status).in_array(%w[lobby active completed]) }
+    it { is_expected.to define_enum_for(:status).backed_by_column_of_type(:string).with_values(lobby: "lobby", active: "active", completed: "completed") }
   end
 end

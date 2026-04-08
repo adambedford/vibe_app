@@ -9,7 +9,14 @@ class FeedBuilder
 
   def self.home(user, cursor: nil, per_page: 20)
     candidates = fetch_candidates(user)
-    scored = candidates.map { |app| [ app, feed_score(app, user) ] }
+
+    # Cache expensive lookups once instead of per-app
+    following_set = user.following_ids.to_set
+    cold_start_ids = candidates.select { |a| a.play_count < 10 && a.created_at > 6.hours.ago }.map(&:id)
+    early_medians = cold_start_ids.any? ? preload_early_medians(cold_start_ids) : {}
+
+    ctx = { following_set: following_set, early_medians: early_medians }
+    scored = candidates.map { |app| [ app, feed_score(app, ctx) ] }
     ranked = scored.sort_by { |_, score| -score }.map(&:first)
     diversified = apply_diversity(ranked)
 
@@ -29,11 +36,12 @@ class FeedBuilder
     paginate_results(diversified, cursor: cursor, per_page: per_page)
   end
 
-  def self.feed_score(app, user)
+  # ctx keys: following_set (Set), early_medians (Hash<app_id, Float>)
+  def self.feed_score(app, ctx)
     quality_score(app) *
     freshness_multiplier(app) *
-    social_multiplier(app, user) *
-    cold_start_boost(app)
+    social_multiplier(app, ctx[:following_set]) *
+    cold_start_boost(app, ctx[:early_medians])
   end
 
   def self.quality_score(app)
@@ -48,34 +56,39 @@ class FeedBuilder
     [ 2.0 / (1.0 + (hours / 24.0)), 0.1 ].max
   end
 
-  def self.social_multiplier(app, user)
-    if user.following_ids.include?(app.creator_id)
+  def self.social_multiplier(app, following_set)
+    if following_set.include?(app.creator_id)
       1.5
-    elsif socially_endorsed?(app, user)
+    elsif socially_endorsed?(app, following_set)
       1.2
     else
       1.0
     end
   end
 
-  def self.socially_endorsed?(app, user)
-    following_ids = user.following_ids
-    return false if following_ids.empty?
+  def self.socially_endorsed?(app, following_set)
+    return false if following_set.empty?
 
-    Like.where(app_id: app.id, user_id: following_ids).exists? ||
-      App.where(parent_id: app.id, creator_id: following_ids).exists?
+    Like.where(app_id: app.id, user_id: following_set.to_a).exists? ||
+      App.where(parent_id: app.id, creator_id: following_set.to_a).exists?
   end
 
-  def self.cold_start_boost(app)
+  # Batch-load early play medians for cold-start apps to avoid per-app queries
+  def self.preload_early_medians(app_ids)
+    PlaySession.where(app_id: app_ids)
+      .group(:app_id)
+      .pluck(:app_id, Arel.sql("PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration_seconds)"))
+      .to_h
+  end
+
+  def self.cold_start_boost(app, early_medians = {})
     return 1.0 if app.play_count >= 10
     return 1.0 if app.created_at < 6.hours.ago
 
     # Early bounce penalty — if first plays show <5s median, kill the boost
     if app.play_count >= 3
-      median_duration = app.play_sessions.order(:created_at).limit(10).pluck(:duration_seconds).sort
-      mid = median_duration.length / 2
-      median = median_duration.length.odd? ? median_duration[mid] : (median_duration[mid - 1].to_f + median_duration[mid].to_f) / 2
-      return 0.5 if median < 5
+      median = early_medians[app.id]
+      return 0.5 if median && median < 5
     end
 
     2.0
