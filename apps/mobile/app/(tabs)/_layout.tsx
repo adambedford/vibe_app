@@ -11,11 +11,25 @@ function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>['nam
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: colors.accentPrimary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: isDark ? colors.surface : colors.void,
+          borderTopColor: isDark ? colors.elevated : colors.surface,
+        },
+        headerStyle: {
+          backgroundColor: isDark ? colors.void : colors.void,
+        },
+        headerTintColor: colors.textPrimary,
+        headerTitleStyle: {
+          fontFamily: 'ClashDisplay-Semibold',
+        },
         headerShown: true,
       }}>
       <Tabs.Screen

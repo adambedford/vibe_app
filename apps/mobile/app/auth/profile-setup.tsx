@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { Pressable, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { Text, View } from '@/components/Themed';
+import { Text, H1, Caption } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { me } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { trackProfileSetupCompleted } from '@/services/analytics';
@@ -30,43 +32,49 @@ export default function ProfileSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.form}>
-        <Text style={styles.title}>Set up your profile</Text>
-        <Text style={styles.subtitle}>You can always change this later</Text>
+    <KeyboardAvoidingView
+      className="flex-1 justify-center bg-void dark:bg-void"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View className="p-6">
+        <H1 className="mb-1">Set up your profile</H1>
+        <Text className="text-text-secondary mb-6">You can always change this later</Text>
 
-        <Text style={styles.label}>Display name</Text>
-        <TextInput style={styles.input} value={displayName} onChangeText={setDisplayName}
-          placeholder="Your name" />
+        <Caption className="mb-1.5 mt-3">Display name</Caption>
+        <Input
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Your name"
+          className="mb-1"
+        />
 
-        <Text style={styles.label}>Username</Text>
-        <TextInput style={styles.input} value={username} onChangeText={setUsername}
-          placeholder="username" autoCapitalize="none" />
+        <Caption className="mb-1.5 mt-3">Username</Caption>
+        <Input
+          value={username}
+          onChangeText={setUsername}
+          placeholder="username"
+          autoCapitalize="none"
+          className="mb-1"
+        />
 
-        <Text style={styles.label}>Bio (optional)</Text>
-        <TextInput style={styles.input} value={bio} onChangeText={setBio}
-          placeholder="Tell us about yourself" multiline maxLength={150} />
+        <Caption className="mb-1.5 mt-3">Bio (optional)</Caption>
+        <Input
+          value={bio}
+          onChangeText={setBio}
+          placeholder="Tell us about yourself"
+          multiline
+          maxLength={150}
+          className="mb-6"
+        />
 
-        <TouchableOpacity style={styles.button} onPress={handleSave} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Saving...' : 'Continue'}</Text>
-        </TouchableOpacity>
+        <Button onPress={handleSave} disabled={loading}>
+          {loading ? 'Saving...' : 'Continue'}
+        </Button>
 
-        <TouchableOpacity onPress={() => router.replace('/')}>
-          <Text style={styles.skipText}>Skip for now</Text>
-        </TouchableOpacity>
+        <Pressable onPress={() => router.replace('/')} className="mt-4">
+          <Text className="text-center text-text-muted text-[14px]">Skip for now</Text>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center' },
-  form: { padding: 24 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
-  subtitle: { fontSize: 14, color: '#888', marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 6, marginTop: 12 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 14, fontSize: 16, marginBottom: 4 },
-  button: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  skipText: { textAlign: 'center', color: '#888', marginTop: 16, fontSize: 14 },
-});

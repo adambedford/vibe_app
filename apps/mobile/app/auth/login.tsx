@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { Pressable, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { Text, View } from '@/components/Themed';
+import { Text, H1 } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { auth } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -29,36 +31,49 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.form}>
-        <Text style={styles.title}>Welcome back</Text>
+    <KeyboardAvoidingView
+      className="flex-1 justify-center bg-void dark:bg-void"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View className="p-6">
+        <H1 className="mb-6">Welcome back</H1>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <Text className="text-error mb-3">{error}</Text>
+        ) : null}
 
-        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail}
-          autoCapitalize="none" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword}
-          secureTextEntry />
+        <Input
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          className="mb-3"
+        />
+        <Input
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          className="mb-4"
+        />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Signing in...' : 'Sign In'}</Text>
-        </TouchableOpacity>
+        <Button onPress={handleLogin} disabled={loading}>
+          {loading ? 'Signing in...' : 'Sign In'}
+        </Button>
 
-        <TouchableOpacity onPress={() => { router.back(); router.push('/auth/register'); }}>
-          <Text style={styles.link}>Don't have an account? Sign up</Text>
-        </TouchableOpacity>
+        <Pressable
+          onPress={() => {
+            router.back();
+            router.push('/auth/register');
+          }}
+          className="mt-5"
+        >
+          <Text className="text-center text-plasma text-[14px]">
+            Don't have an account? Sign up
+          </Text>
+        </Pressable>
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center' },
-  form: { padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 16, fontSize: 16, marginBottom: 12 },
-  button: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 8 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  error: { color: '#FF3B30', marginBottom: 12 },
-  link: { textAlign: 'center', color: '#007AFF', marginTop: 20, fontSize: 14 },
-});

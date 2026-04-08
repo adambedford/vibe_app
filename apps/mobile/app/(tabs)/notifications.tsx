@@ -1,10 +1,12 @@
-import { FlatList, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { Text, View } from '@/components/Themed';
+import { Text, Caption } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { notifications as notifApi } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
+import { cn } from '@/lib/utils';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -24,11 +26,11 @@ export default function NotificationsScreen() {
 
   if (!isAuthenticated) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.emptyText}>Sign in to see your notifications</Text>
-        <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/auth/login')}>
-          <Text style={styles.signInText}>Sign In</Text>
-        </TouchableOpacity>
+      <View className="flex-1 bg-void dark:bg-void items-center justify-center p-6">
+        <Text className="text-text-secondary text-center mb-4">
+          Sign in to see your notifications
+        </Text>
+        <Button onPress={() => router.push('/auth/login')}>Sign In</Button>
       </View>
     );
   }
@@ -36,25 +38,39 @@ export default function NotificationsScreen() {
   const items = data?.data ?? [];
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-void dark:bg-void">
       {items.length > 0 && (
-        <TouchableOpacity style={styles.readAllButton} onPress={() => readAll.mutate()}>
-          <Text style={styles.readAllText}>Mark all as read</Text>
-        </TouchableOpacity>
+        <Pressable
+          className="p-3 items-end pr-4"
+          onPress={() => readAll.mutate()}
+        >
+          <Text className="text-plasma text-[14px]">Mark all as read</Text>
+        </Pressable>
       )}
       <FlatList
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <View style={[styles.notifRow, !item.read && styles.unread]}>
-            <Text style={styles.notifText}>
-              {item.actor?.display_name && <Text style={styles.bold}>{item.actor.display_name} </Text>}
+          <View
+            className={cn(
+              'p-4 border-b border-elevated',
+              !item.read && 'bg-info/10'
+            )}
+          >
+            <Text className="text-[15px] text-text-primary">
+              {item.actor?.display_name && (
+                <Text className="font-satoshi-bold">{item.actor.display_name} </Text>
+              )}
               {notifMessage(item)}
             </Text>
           </View>
         )}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        ListEmptyComponent={<Text style={styles.emptyText}>No notifications yet</Text>}
+        ListEmptyComponent={
+          <Text className="text-text-secondary text-center mt-10">
+            No notifications yet
+          </Text>
+        }
       />
     </View>
   );
@@ -62,23 +78,15 @@ export default function NotificationsScreen() {
 
 function notifMessage(item: any): string {
   switch (item.type) {
-    case 'follow': return 'followed you';
-    case 'like': return `liked your ${item.app?.title ?? 'app'}`;
-    case 'comment': return `commented on ${item.app?.title ?? 'your app'}`;
-    case 'remix': return `remixed ${item.app?.title ?? 'your app'}`;
-    default: return item.type;
+    case 'follow':
+      return 'followed you';
+    case 'like':
+      return `liked your ${item.app?.title ?? 'app'}`;
+    case 'comment':
+      return `commented on ${item.app?.title ?? 'your app'}`;
+    case 'remix':
+      return `remixed ${item.app?.title ?? 'your app'}`;
+    default:
+      return item.type;
   }
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  notifRow: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  unread: { backgroundColor: '#f0f7ff' },
-  notifText: { fontSize: 15 },
-  bold: { fontWeight: '600' },
-  emptyText: { textAlign: 'center', color: '#888', marginTop: 40, fontSize: 16 },
-  readAllButton: { padding: 12, alignItems: 'flex-end', paddingRight: 16 },
-  readAllText: { color: '#007AFF', fontSize: 14 },
-  signInButton: { alignSelf: 'center', backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 12, marginTop: 16 },
-  signInText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

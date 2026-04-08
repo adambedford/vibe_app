@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
-import { Text, View } from '@/components/Themed';
-import { apps, creation } from '@/services/api';
+import { Text, H2, Caption } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { apps } from '@/services/api';
 
 const REMIX_OPTIONS = [
   { label: 'Change the theme', icon: '🎨' },
@@ -38,46 +40,47 @@ export default function RemixScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.title}>Remix: {app?.title ?? 'Loading...'}</Text>
-        {app?.creator && <Text style={styles.subtitle}>by @{app.creator.username}</Text>}
+    <KeyboardAvoidingView
+      className="flex-1 bg-void dark:bg-void"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={{ padding: 24 }}>
+        <H2>Remix: {app?.title ?? 'Loading...'}</H2>
+        {app?.creator && (
+          <Caption className="mt-1 mb-6">by @{app.creator.username}</Caption>
+        )}
 
-        <Text style={styles.sectionTitle}>What would you like to change?</Text>
+        <Text variant="h3" className="mb-3">
+          What would you like to change?
+        </Text>
 
         {REMIX_OPTIONS.map((opt) => (
-          <TouchableOpacity key={opt.label} style={styles.option}
-            onPress={() => setDescription(opt.label.toLowerCase())}>
-            <Text style={styles.optionText}>{opt.icon} {opt.label}</Text>
-          </TouchableOpacity>
+          <Pressable
+            key={opt.label}
+            onPress={() => setDescription(opt.label.toLowerCase())}
+          >
+            <Card className="p-4 mb-2.5">
+              <Text className="text-[16px]">
+                {opt.icon} {opt.label}
+              </Text>
+            </Card>
+          </Pressable>
         ))}
 
         <TextInput
-          style={styles.input}
+          className="border border-elevated bg-elevated rounded-lg p-4 text-[16px] text-text-primary min-h-[80px] mt-4 mb-4"
           placeholder="Describe your changes..."
+          placeholderTextColor="#6B6B6B"
           value={description}
           onChangeText={setDescription}
           multiline
           maxLength={500}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleRemix} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Remixing...' : 'Start Remix'}</Text>
-        </TouchableOpacity>
+        <Button onPress={handleRemix} disabled={loading}>
+          {loading ? 'Remixing...' : 'Start Remix'}
+        </Button>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: { padding: 24 },
-  title: { fontSize: 22, fontWeight: 'bold' },
-  subtitle: { fontSize: 14, color: '#888', marginTop: 4, marginBottom: 24 },
-  sectionTitle: { fontSize: 17, fontWeight: '600', marginBottom: 12 },
-  option: { padding: 16, borderRadius: 12, backgroundColor: '#f0f0f0', marginBottom: 10 },
-  optionText: { fontSize: 16 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 16, fontSize: 16, minHeight: 80, textAlignVertical: 'top', marginTop: 16, marginBottom: 16 },
-  button: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

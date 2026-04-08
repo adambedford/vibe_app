@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import '../global.css';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuthStore } from '@/stores/authStore';
 import { initAnalytics, identify, trackAppOpened } from '@/services/analytics';
@@ -23,7 +24,23 @@ const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
+    // Legacy font (keep for backwards compatibility during migration)
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+
+    // Clash Display - Headlines
+    'ClashDisplay-Medium': require('../assets/fonts/ClashDisplay-Medium.otf'),
+    'ClashDisplay-Semibold': require('../assets/fonts/ClashDisplay-Semibold.otf'),
+    'ClashDisplay-Bold': require('../assets/fonts/ClashDisplay-Bold.otf'),
+
+    // Satoshi - Body text
+    'Satoshi-Regular': require('../assets/fonts/Satoshi-Regular.otf'),
+    'Satoshi-Medium': require('../assets/fonts/Satoshi-Medium.otf'),
+    'Satoshi-Bold': require('../assets/fonts/Satoshi-Bold.otf'),
+
+    // Geist Mono - Data/stats
+    'GeistMono-Regular': require('../assets/fonts/GeistMono-Regular.otf'),
+    'GeistMono-Medium': require('../assets/fonts/GeistMono-Medium.otf'),
+
     ...FontAwesome.font,
   });
 

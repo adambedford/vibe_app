@@ -1,8 +1,10 @@
-import { StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { FlatList, Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { Text, View } from '@/components/Themed';
+import { Text, H2, Caption, Mono } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Avatar } from '@/components/ui/avatar';
 import { users } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import FeedCard from '@/components/feed/FeedCard';
@@ -34,47 +36,69 @@ export default function UserProfileScreen() {
   const user = userData?.data;
   const userApps = appsData?.data ?? [];
 
-  if (!user) return <View style={styles.container}><Text>Loading...</Text></View>;
+  if (!user) {
+    return (
+      <View className="flex-1 items-center justify-center bg-void">
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-void dark:bg-void">
       <FlatList
         data={userApps}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <FeedCard app={item} onPress={() => router.push(`/app/${item.id}`)} />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
         ListHeaderComponent={
-          <View style={styles.header}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>{user.display_name[0]}</Text>
+          <View className="items-center py-6">
+            <Avatar
+              size="xl"
+              source={user.avatar_url ? { uri: user.avatar_url } : undefined}
+              fallback={user.display_name}
+              className="mb-3"
+            />
+            <H2>{user.display_name}</H2>
+            <Caption className="text-text-muted mt-0.5">@{user.username}</Caption>
+            {user.bio && (
+              <Text className="text-text-secondary text-center mt-2 px-8">
+                {user.bio}
+              </Text>
+            )}
+
+            {/* Stats */}
+            <View className="flex-row mt-4 gap-8">
+              <View className="items-center">
+                <Mono className="text-[18px] font-satoshi-bold text-text-primary">
+                  {user.follower_count}
+                </Mono>
+                <Caption className="mt-0.5">Followers</Caption>
+              </View>
+              <View className="items-center">
+                <Mono className="text-[18px] font-satoshi-bold text-text-primary">
+                  {user.following_count}
+                </Mono>
+                <Caption className="mt-0.5">Following</Caption>
+              </View>
+              <View className="items-center">
+                <Mono className="text-[18px] font-satoshi-bold text-text-primary">
+                  {user.app_count}
+                </Mono>
+                <Caption className="mt-0.5">Apps</Caption>
+              </View>
             </View>
-            <Text style={styles.displayName}>{user.display_name}</Text>
-            <Text style={styles.username}>@{user.username}</Text>
-            {user.bio && <Text style={styles.bio}>{user.bio}</Text>}
-            <View style={styles.stats}>
-              <View style={styles.stat}>
-                <Text style={styles.statCount}>{user.follower_count}</Text>
-                <Text style={styles.statLabel}>Followers</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statCount}>{user.following_count}</Text>
-                <Text style={styles.statLabel}>Following</Text>
-              </View>
-              <View style={styles.stat}>
-                <Text style={styles.statCount}>{user.app_count}</Text>
-                <Text style={styles.statLabel}>Apps</Text>
-              </View>
-            </View>
+
             {isAuthenticated && user.is_following !== null && (
-              <TouchableOpacity
-                style={[styles.followButton, user.is_following && styles.followingButton]}
-                onPress={() => followMutation.mutate()}>
-                <Text style={[styles.followText, user.is_following && styles.followingText]}>
-                  {user.is_following ? 'Following' : 'Follow'}
-                </Text>
-              </TouchableOpacity>
+              <Button
+                variant={user.is_following ? 'outline' : 'default'}
+                onPress={() => followMutation.mutate()}
+                className="mt-4"
+              >
+                {user.is_following ? 'Following' : 'Follow'}
+              </Button>
             )}
           </View>
         }
@@ -82,22 +106,3 @@ export default function UserProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  list: { paddingHorizontal: 16, paddingBottom: 20 },
-  header: { alignItems: 'center', paddingVertical: 24 },
-  avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#007AFF', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  avatarText: { color: '#fff', fontSize: 32, fontWeight: 'bold' },
-  displayName: { fontSize: 22, fontWeight: 'bold' },
-  username: { fontSize: 15, color: '#888', marginTop: 2 },
-  bio: { fontSize: 14, color: '#666', marginTop: 8, textAlign: 'center', paddingHorizontal: 32 },
-  stats: { flexDirection: 'row', marginTop: 16, gap: 32 },
-  stat: { alignItems: 'center' },
-  statCount: { fontSize: 18, fontWeight: '700' },
-  statLabel: { fontSize: 12, color: '#888', marginTop: 2 },
-  followButton: { marginTop: 16, backgroundColor: '#007AFF', paddingVertical: 10, paddingHorizontal: 32, borderRadius: 20 },
-  followingButton: { backgroundColor: '#e8e8e8' },
-  followText: { color: '#fff', fontWeight: '600' },
-  followingText: { color: '#333' },
-});

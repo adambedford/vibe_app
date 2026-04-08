@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { View } from 'react-native';
+
+import { Text, H1, Caption } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 const STAGE_LABELS: Record<string, string> = {
   enhancing: 'Designing your app...',
@@ -41,37 +44,42 @@ export default function GenerationProgress({ status, progress, onViewApp, onDism
   const isFailed = status === 'failed';
 
   return (
-    <View style={styles.container}>
-      {!isComplete && !isFailed && (
-        <Text style={styles.emoji}>🚀</Text>
-      )}
-      {isComplete && <Text style={styles.emoji}>🎉</Text>}
-      {isFailed && <Text style={styles.emoji}>😔</Text>}
-
-      <Text style={styles.title}>
-        {isComplete ? 'Your app is ready!' : isFailed ? "We couldn't build that one" : 'Building your app...'}
+    <View className="flex-1 items-center justify-center p-8">
+      <Text className="text-[48px] mb-4">
+        {isComplete ? '🎉' : isFailed ? '😔' : '🚀'}
       </Text>
 
+      <H1 className="text-center mb-5">
+        {isComplete
+          ? 'Your app is ready!'
+          : isFailed
+          ? "We couldn't build that one"
+          : 'Building your app...'}
+      </H1>
+
       {!isComplete && !isFailed && (
-        <View style={styles.progressBarOuter}>
-          <View style={[styles.progressBarInner, { width: `${displayProgress}%` }]} />
-        </View>
+        <Progress value={displayProgress} className="w-full mb-3" variant="default" />
       )}
 
-      <Text style={styles.stageLabel}>{label}</Text>
+      <Text className="text-text-secondary mb-6">{label}</Text>
 
       {!isComplete && !isFailed && (
-        <View style={styles.stages}>
+        <View className="w-full mb-6">
           {COMPLETED_STAGES.map((stage, i) => {
             const stageIdx = COMPLETED_STAGES.indexOf(status);
             const isDone = i < stageIdx || isComplete;
             const isCurrent = stage === status;
             return (
-              <View key={stage} style={styles.stageRow}>
-                <Text style={styles.stageIcon}>
+              <View key={stage} className="flex-row items-center mb-2">
+                <Text className="text-[16px] mr-2.5 w-6">
                   {isDone ? '✅' : isCurrent ? '🔄' : '○'}
                 </Text>
-                <Text style={[styles.stageText, isDone && styles.stageDone]}>
+                <Text
+                  className={cn(
+                    'text-[14px]',
+                    isDone ? 'text-text-primary line-through' : 'text-text-muted'
+                  )}
+                >
                   {STAGE_LABELS[stage]}
                 </Text>
               </View>
@@ -81,39 +89,22 @@ export default function GenerationProgress({ status, progress, onViewApp, onDism
       )}
 
       {isComplete && onViewApp && (
-        <TouchableOpacity style={styles.primaryButton} onPress={onViewApp}>
-          <Text style={styles.buttonText}>Play your app</Text>
-        </TouchableOpacity>
+        <Button onPress={onViewApp} className="w-full mb-3">
+          Play your app
+        </Button>
       )}
 
       {isFailed && onDismiss && (
-        <TouchableOpacity style={styles.secondaryButton} onPress={onDismiss}>
-          <Text style={styles.secondaryText}>Try again</Text>
-        </TouchableOpacity>
+        <Button variant="ghost" onPress={onDismiss}>
+          Try again
+        </Button>
       )}
 
       {!isComplete && !isFailed && (
-        <Text style={styles.hint}>You can leave this screen — we'll notify you when it's ready!</Text>
+        <Caption className="text-center mt-4">
+          You can leave this screen — we'll notify you when it's ready!
+        </Caption>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emoji: { fontSize: 48, marginBottom: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  progressBarOuter: { width: '100%', height: 8, backgroundColor: '#e8e8e8', borderRadius: 4, marginBottom: 12 },
-  progressBarInner: { height: 8, backgroundColor: '#007AFF', borderRadius: 4 },
-  stageLabel: { fontSize: 16, color: '#666', marginBottom: 24 },
-  stages: { width: '100%', marginBottom: 24 },
-  stageRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  stageIcon: { fontSize: 16, marginRight: 10, width: 24 },
-  stageText: { fontSize: 14, color: '#888' },
-  stageDone: { color: '#333', textDecorationLine: 'line-through' },
-  primaryButton: { backgroundColor: '#007AFF', padding: 16, borderRadius: 12, alignItems: 'center', width: '100%', marginBottom: 12 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  secondaryButton: { padding: 16, alignItems: 'center' },
-  secondaryText: { color: '#007AFF', fontSize: 16 },
-  hint: { fontSize: 13, color: '#999', textAlign: 'center', marginTop: 16 },
-});

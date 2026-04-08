@@ -1,5 +1,11 @@
-import { StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { Pressable, View } from 'react-native';
+import { Image } from 'expo-image';
+
+import { Text, Caption, Mono } from '@/components/ui/text';
+import { Avatar } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type FeedCardProps = {
   app: {
@@ -18,36 +24,65 @@ type FeedCardProps = {
 };
 
 export default function FeedCard({ app, onPress }: FeedCardProps) {
+  const emoji =
+    app.category === 'game'
+      ? '🎮'
+      : app.category === 'story'
+      ? '📖'
+      : app.category === 'art_tool'
+      ? '🎨'
+      : '✨';
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      {app.thumbnail_url ? (
-        <Image source={{ uri: app.thumbnail_url }} style={styles.thumbnail} />
-      ) : (
-        <View style={styles.placeholderThumb}>
-          <Text style={styles.placeholderEmoji}>
-            {app.category === 'game' ? '🎮' : app.category === 'story' ? '📖' : app.category === 'art_tool' ? '🎨' : '✨'}
-          </Text>
-        </View>
-      )}
+    <Pressable onPress={onPress}>
+      {({ pressed }) => (
+        <Card
+          variant="default"
+          className={cn('mb-4 overflow-hidden', pressed && 'opacity-90')}
+        >
+          {app.thumbnail_url ? (
+            <Image
+              source={{ uri: app.thumbnail_url }}
+              className="w-full h-[200px]"
+              contentFit="cover"
+            />
+          ) : (
+            <View className="w-full h-[200px] bg-elevated items-center justify-center">
+              <Text className="text-[48px]">{emoji}</Text>
+            </View>
+          )}
 
-      <View style={styles.info}>
-        <View style={styles.creatorRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarLetter}>{app.creator.display_name[0]}</Text>
+          <View className="p-3">
+            {/* Creator row */}
+            <View className="flex-row items-center mb-1.5">
+              <Avatar
+                size="xs"
+                source={app.creator.avatar_url ? { uri: app.creator.avatar_url } : undefined}
+                fallback={app.creator.display_name}
+              />
+              <Caption className="ml-2 flex-1 text-text-secondary">
+                {app.creator.display_name}
+              </Caption>
+              {app.is_multiplayer && <Badge variant="primary">Multiplayer</Badge>}
+            </View>
+
+            {/* Title */}
+            <Text variant="h3" numberOfLines={1} className="mb-2">
+              {app.title}
+            </Text>
+
+            {/* Stats row */}
+            <View className="flex-row gap-4">
+              <Mono className="text-text-muted">▶ {formatCount(app.play_count)}</Mono>
+              <Mono className="text-text-muted">
+                {app.is_liked ? '❤️' : '♡'} {formatCount(app.like_count)}
+              </Mono>
+              <Mono className="text-text-muted">🔀 {formatCount(app.remix_count)}</Mono>
+            </View>
           </View>
-          <Text style={styles.creatorName}>{app.creator.display_name}</Text>
-          {app.is_multiplayer && <Text style={styles.badge}>Multiplayer</Text>}
-        </View>
-
-        <Text style={styles.title} numberOfLines={1}>{app.title}</Text>
-
-        <View style={styles.statsRow}>
-          <Text style={styles.stat}>▶ {formatCount(app.play_count)}</Text>
-          <Text style={styles.stat}>{app.is_liked ? '❤️' : '♡'} {formatCount(app.like_count)}</Text>
-          <Text style={styles.stat}>🔀 {formatCount(app.remix_count)}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+        </Card>
+      )}
+    </Pressable>
   );
 }
 
@@ -56,19 +91,3 @@ function formatCount(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
   return String(n);
 }
-
-const styles = StyleSheet.create({
-  card: { borderRadius: 16, overflow: 'hidden', marginBottom: 16, backgroundColor: '#f8f8f8' },
-  thumbnail: { width: '100%', height: 200 },
-  placeholderThumb: { width: '100%', height: 200, backgroundColor: '#e8e8e8', alignItems: 'center', justifyContent: 'center' },
-  placeholderEmoji: { fontSize: 48 },
-  info: { padding: 12 },
-  creatorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  avatar: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#007AFF', alignItems: 'center', justifyContent: 'center', marginRight: 8 },
-  avatarLetter: { color: '#fff', fontSize: 12, fontWeight: '600' },
-  creatorName: { fontSize: 13, color: '#666', flex: 1 },
-  badge: { fontSize: 11, color: '#007AFF', backgroundColor: '#e8f0fe', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, overflow: 'hidden' },
-  title: { fontSize: 17, fontWeight: '600', marginBottom: 8 },
-  statsRow: { flexDirection: 'row', gap: 16 },
-  stat: { fontSize: 13, color: '#888' },
-});

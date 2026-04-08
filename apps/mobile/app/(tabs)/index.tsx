@@ -1,11 +1,12 @@
-import { FlatList, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl, View, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { Text, View } from '@/components/Themed';
+import { Text } from '@/components/ui/text';
 import { feed } from '@/services/api';
 import FeedCard from '@/components/feed/FeedCard';
+import { cn } from '@/lib/utils';
 
 type FeedTab = 'home' | 'following';
 
@@ -13,7 +14,7 @@ export default function FeedScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<FeedTab>('home');
 
-  const { data, fetchNextPage, hasNextPage, isLoading, refetch, isRefetching } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, refetch, isRefetching } = useInfiniteQuery({
     queryKey: ['feed', tab],
     queryFn: ({ pageParam }) => {
       const fetcher = tab === 'home' ? feed.home : feed.following;
@@ -27,14 +28,41 @@ export default function FeedScreen() {
   const apps = data?.pages.flatMap((p: any) => p.data) ?? [];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.tabBar}>
-        <TouchableOpacity onPress={() => setTab('home')} style={[styles.tab, tab === 'home' && styles.activeTab]}>
-          <Text style={[styles.tabText, tab === 'home' && styles.activeTabText]}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setTab('following')} style={[styles.tab, tab === 'following' && styles.activeTab]}>
-          <Text style={[styles.tabText, tab === 'following' && styles.activeTabText]}>Following</Text>
-        </TouchableOpacity>
+    <View className="flex-1 bg-void dark:bg-void">
+      {/* Tab bar */}
+      <View className="flex-row px-4 py-2 gap-3">
+        <Pressable
+          onPress={() => setTab('home')}
+          className={cn(
+            'py-1.5 px-4 rounded-full',
+            tab === 'home' ? 'bg-plasma' : 'bg-transparent'
+          )}
+        >
+          <Text
+            className={cn(
+              'text-[15px] font-satoshi-medium',
+              tab === 'home' ? 'text-white' : 'text-text-muted'
+            )}
+          >
+            Home
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setTab('following')}
+          className={cn(
+            'py-1.5 px-4 rounded-full',
+            tab === 'following' ? 'bg-plasma' : 'bg-transparent'
+          )}
+        >
+          <Text
+            className={cn(
+              'text-[15px] font-satoshi-medium',
+              tab === 'following' ? 'text-white' : 'text-text-muted'
+            )}
+          >
+            Following
+          </Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -46,18 +74,8 @@ export default function FeedScreen() {
         onEndReached={() => hasNextPage && fetchNextPage()}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  tabBar: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 8, gap: 12 },
-  tab: { paddingVertical: 6, paddingHorizontal: 16, borderRadius: 20 },
-  activeTab: { backgroundColor: '#007AFF' },
-  tabText: { fontSize: 15, color: '#888' },
-  activeTabText: { color: '#fff', fontWeight: '600' },
-  list: { paddingHorizontal: 16, paddingBottom: 20 },
-});

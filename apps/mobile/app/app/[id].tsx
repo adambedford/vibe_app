@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { StyleSheet, TouchableOpacity, SafeAreaView, AppState } from 'react-native';
+import { Pressable, SafeAreaView, AppState, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 
-import { Text, View } from '@/components/Themed';
+import { Text, Mono } from '@/components/ui/text';
 import { apps } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
 import { getInjectedSDK, stripCDNTags, injectCSP } from '@/services/webview';
-import { trackAppPlayed, trackAppPlayDuration } from '@/services/analytics';
 
 export default function AppPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -87,21 +86,14 @@ export default function AppPlayerScreen() {
       switch (type) {
         case 'platform:end_session':
           completedRef.current = true;
-          if (payload?.score !== undefined) {
-            // Score submission handled server-side via SDK
-          }
           break;
         case 'platform:exit':
           router.back();
           break;
         case 'platform:share':
-          // TODO: trigger native share sheet
-          break;
         case 'platform:haptic':
-          // TODO: trigger haptic feedback via expo-haptics
-          break;
         case 'platform:play_sound':
-          // TODO: play platform UI sound
+          // TODO: implement native features
           break;
         case 'lobby:create':
         case 'lobby:join':
@@ -115,7 +107,6 @@ export default function AppPlayerScreen() {
         case 'score:submit':
         case 'score:get_leaderboard':
         case 'score:get_my_best':
-          // TODO: forward to Firebase/API and send response back
           if (_reqId) {
             sendToWebView(`${type}:response`, {}, _reqId);
           }
@@ -133,25 +124,39 @@ export default function AppPlayerScreen() {
   }
 
   const app = data?.data;
-  if (!app) return <View style={styles.loading}><Text>Loading...</Text></View>;
+  if (!app) {
+    return (
+      <View className="flex-1 items-center justify-center bg-void">
+        <Text className="text-text-primary">Loading...</Text>
+      </View>
+    );
+  }
 
   const injectedJS = getInjectedSDK(user);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>Close</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{app.title}</Text>
-        <View style={styles.headerSpacer} />
+    <SafeAreaView className="flex-1 bg-void">
+      {/* Header */}
+      <View className="flex-row items-center px-3 py-2 bg-void/80">
+        <Pressable onPress={() => router.back()} className="p-2">
+          <Text className="text-white text-[16px]">Close</Text>
+        </Pressable>
+        <Text
+          variant="h3"
+          numberOfLines={1}
+          className="flex-1 text-center text-white"
+        >
+          {app.title}
+        </Text>
+        <View className="w-[50px]" />
       </View>
 
+      {/* WebView */}
       {htmlContent ? (
         <WebView
           ref={webviewRef}
           source={{ html: htmlContent }}
-          style={styles.webview}
+          className="flex-1"
           javaScriptEnabled
           domStorageEnabled
           mediaPlaybackRequiresUserAction={false}
@@ -164,37 +169,35 @@ export default function AppPlayerScreen() {
           onMessage={handleMessage}
         />
       ) : app.bundle_url ? (
-        <View style={styles.loading}><Text style={{ color: '#fff' }}>Loading app...</Text></View>
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-white">Loading app...</Text>
+        </View>
       ) : (
-        <View style={styles.noBundle}><Text>No published version yet.</Text></View>
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-text-secondary">No published version yet.</Text>
+        </View>
       )}
 
-      <View style={styles.actionBar}>
-        <TouchableOpacity onPress={() => isAuthenticated && likeMutation.mutate()} style={styles.action}>
-          <Text style={styles.actionText}>{app.is_liked ? '❤️' : '♡'} {app.like_count}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.action}>
-          <Text style={styles.actionText}>💬 {app.comment_count}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => isAuthenticated && apps.remix(Number(id))} style={styles.action}>
-          <Text style={styles.actionText}>🔀 {app.remix_count}</Text>
-        </TouchableOpacity>
+      {/* Action bar */}
+      <View className="flex-row justify-around py-3 bg-void/80">
+        <Pressable
+          onPress={() => isAuthenticated && likeMutation.mutate()}
+          className="p-2"
+        >
+          <Mono className="text-white text-[16px]">
+            {app.is_liked ? '❤️' : '♡'} {app.like_count}
+          </Mono>
+        </Pressable>
+        <Pressable className="p-2">
+          <Mono className="text-white text-[16px]">💬 {app.comment_count}</Mono>
+        </Pressable>
+        <Pressable
+          onPress={() => isAuthenticated && apps.remix(Number(id))}
+          className="p-2"
+        >
+          <Mono className="text-white text-[16px]">🔀 {app.remix_count}</Mono>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: 'rgba(0,0,0,0.8)' },
-  headerButton: { padding: 8 },
-  headerButtonText: { color: '#fff', fontSize: 16 },
-  headerTitle: { flex: 1, color: '#fff', fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  headerSpacer: { width: 50 },
-  webview: { flex: 1 },
-  noBundle: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  actionBar: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12, backgroundColor: 'rgba(0,0,0,0.8)' },
-  action: { padding: 8 },
-  actionText: { color: '#fff', fontSize: 16 },
-});

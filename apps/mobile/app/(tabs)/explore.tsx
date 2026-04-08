@@ -1,8 +1,7 @@
-import { FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
-import { View } from '@/components/Themed';
 import { feed } from '@/services/api';
 import FeedCard from '@/components/feed/FeedCard';
 
@@ -20,7 +19,7 @@ export default function ExploreScreen() {
   const apps = data?.pages.flatMap((p: any) => p.data) ?? [];
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-void dark:bg-void">
       <FlatList
         data={apps}
         keyExtractor={(item) => String(item.id)}
@@ -30,13 +29,8 @@ export default function ExploreScreen() {
         onEndReached={() => hasNextPage && fetchNextPage()}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  list: { paddingHorizontal: 16, paddingBottom: 20 },
-});
