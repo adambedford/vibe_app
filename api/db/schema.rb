@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_223736) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_08_014813) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -245,11 +245,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_223736) do
     t.date "date_of_birth", null: false
     t.string "display_name", null: false
     t.string "email", null: false
-    t.string "password_digest", null: false
+    t.string "oauth_provider"
+    t.string "oauth_uid"
+    t.string "password_digest"
     t.string "status", default: "active", null: false
     t.datetime "updated_at", null: false
     t.string "username", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["oauth_provider", "oauth_uid"], name: "index_users_on_oauth_provider_and_oauth_uid", unique: true, where: "(oauth_provider IS NOT NULL)"
     t.index ["username"], name: "index_users_on_username", unique: true
   end
 

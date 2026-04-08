@@ -1,21 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { StyleSheet, TouchableOpacity, SafeAreaView, AppState } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
 
 import { Text, View } from '@/components/Themed';
 import { apps } from '@/services/api';
 import { useAuthStore } from '@/stores/authStore';
+import { getInjectedSDK, stripCDNTags } from '@/services/webview';
 
 export default function AppPlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
 
   const timerRef = useRef({ start: Date.now(), accumulated: 0, active: true });
   const completedRef = useRef(false);
+  const webviewRef = useRef<WebView>(null);
+  const [htmlContent, setHtmlContent] = useState<string | null>(null);
 
   const { data } = useQuery({
     queryKey: ['app', id],
@@ -30,9 +33,24 @@ export default function AppPlayerScreen() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['app', id] }),
   });
 
+  // Fetch the HTML bundle and prepare it for WebView
+  useEffect(() => {
+    const app = data?.data;
+    if (!app?.bundle_url) return;
+
+    fetch(app.bundle_url)
+      .then((res) => res.text())
+      .then((html) => {
+        const stripped = stripCDNTags(html);
+        setHtmlContent(stripped);
+      })
+      .catch(() => setHtmlContent(null));
+  }, [data?.data?.bundle_url]);
+
   // Track play duration
   useEffect(() => {
     timerRef.current = { start: Date.now(), accumulated: 0, active: true };
+    completedRef.current = false;
 
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'active' && !timerRef.current.active) {
@@ -59,16 +77,63 @@ export default function AppPlayerScreen() {
     return Math.round(total / 1000);
   }
 
-  const handleMessage = (event: any) => {
+  // Handle SDK bridge messages from WebView
+  const handleMessage = useCallback((event: WebViewMessageEvent) => {
     try {
-      const { type } = JSON.parse(event.nativeEvent.data);
-      if (type === 'platform:end_session') completedRef.current = true;
-      if (type === 'platform:exit') router.back();
+      const { type, payload, _reqId } = JSON.parse(event.nativeEvent.data);
+
+      switch (type) {
+        case 'platform:end_session':
+          completedRef.current = true;
+          if (payload?.score !== undefined) {
+            // Score submission handled server-side via SDK
+          }
+          break;
+        case 'platform:exit':
+          router.back();
+          break;
+        case 'platform:share':
+          // TODO: trigger native share sheet
+          break;
+        case 'platform:haptic':
+          // TODO: trigger haptic feedback via expo-haptics
+          break;
+        case 'platform:play_sound':
+          // TODO: play platform UI sound
+          break;
+        case 'lobby:create':
+        case 'lobby:join':
+        case 'lobby:leave':
+        case 'lobby:start':
+        case 'state:set':
+        case 'state:set_batch':
+        case 'turns:start':
+        case 'turns:end':
+        case 'turns:skip':
+        case 'score:submit':
+        case 'score:get_leaderboard':
+        case 'score:get_my_best':
+          // TODO: forward to Firebase/API and send response back
+          if (_reqId) {
+            sendToWebView(`${type}:response`, {}, _reqId);
+          }
+          break;
+      }
     } catch {}
-  };
+  }, []);
+
+  function sendToWebView(type: string, payload: any, reqId?: string) {
+    const msg = JSON.stringify({ type, payload, _reqId: reqId });
+    webviewRef.current?.injectJavaScript(`
+      window.dispatchEvent(new MessageEvent('message', { data: '${msg.replace(/'/g, "\\'")}' }));
+      true;
+    `);
+  }
 
   const app = data?.data;
   if (!app) return <View style={styles.loading}><Text>Loading...</Text></View>;
+
+  const injectedJS = getInjectedSDK(user);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,27 +145,33 @@ export default function AppPlayerScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {app.bundle_url ? (
+      {htmlContent ? (
         <WebView
-          source={{ uri: app.bundle_url }}
+          ref={webviewRef}
+          source={{ html: htmlContent }}
           style={styles.webview}
           javaScriptEnabled
           domStorageEnabled
           mediaPlaybackRequiresUserAction={false}
           allowsInlineMediaPlayback
+          originWhitelist={['about:blank']}
+          allowsLinkPreview={false}
+          allowFileAccess={false}
+          allowsBackForwardNavigationGestures={false}
+          injectedJavaScriptBeforeContentLoaded={injectedJS}
           onMessage={handleMessage}
         />
+      ) : app.bundle_url ? (
+        <View style={styles.loading}><Text style={{ color: '#fff' }}>Loading app...</Text></View>
       ) : (
-        <View style={styles.noBundle}>
-          <Text>This app has no published version yet.</Text>
-        </View>
+        <View style={styles.noBundle}><Text>No published version yet.</Text></View>
       )}
 
       <View style={styles.actionBar}>
         <TouchableOpacity onPress={() => isAuthenticated && likeMutation.mutate()} style={styles.action}>
           <Text style={styles.actionText}>{app.is_liked ? '❤️' : '♡'} {app.like_count}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push(`/app/${id}`)} style={styles.action}>
+        <TouchableOpacity style={styles.action}>
           <Text style={styles.actionText}>💬 {app.comment_count}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => isAuthenticated && apps.remix(Number(id))} style={styles.action}>

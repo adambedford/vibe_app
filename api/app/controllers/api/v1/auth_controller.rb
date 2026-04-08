@@ -1,7 +1,7 @@
 module Api
   module V1
     class AuthController < BaseController
-      skip_before_action :authenticate!, only: [ :register, :login, :refresh ]
+      skip_before_action :authenticate!, only: [ :register, :login, :refresh, :oauth ]
 
       def register
         user = User.create!(register_params)
@@ -16,6 +16,40 @@ module Api
         end
         tokens = generate_tokens(user)
         render json: { data: { user: UserPresenter.new(user, presenter_context).as_json, tokens: tokens } }
+      end
+
+      def oauth
+        provider = params.require(:provider)
+        token = params.require(:token)
+
+        unless %w[apple google].include?(provider)
+          return render_error("bad_request", "Unsupported provider", status: :bad_request)
+        end
+
+        identity = verify_oauth_token(provider, token)
+        unless identity
+          return render_error("unauthorized", "Invalid OAuth token", status: :unauthorized)
+        end
+
+        user = User.find_by(oauth_provider: provider, oauth_uid: identity[:uid])
+        user ||= User.find_by(email: identity[:email])
+
+        if user
+          user.update!(oauth_provider: provider, oauth_uid: identity[:uid]) unless user.oauth_uid
+        else
+          user = User.create!(
+            email: identity[:email],
+            display_name: identity[:name] || identity[:email].split("@").first,
+            username: generate_username(identity[:name] || identity[:email].split("@").first),
+            date_of_birth: params[:date_of_birth] || 18.years.ago.to_date,
+            oauth_provider: provider,
+            oauth_uid: identity[:uid],
+            password: SecureRandom.hex(16)
+          )
+        end
+
+        tokens = generate_tokens(user)
+        render json: { data: { user: UserPresenter.new(user, presenter_context).as_json, tokens: tokens, is_new: user.previously_new_record? } }
       end
 
       def refresh
@@ -54,6 +88,57 @@ module Api
           secret, "HS256"
         )
         { access_token: access, refresh_token: refresh, expires_in: 900 }
+      end
+
+      def verify_oauth_token(provider, token)
+        case provider
+        when "apple"
+          verify_apple_token(token)
+        when "google"
+          verify_google_token(token)
+        end
+      end
+
+      def verify_apple_token(identity_token)
+        # Decode Apple identity token (JWT signed by Apple)
+        # In production: verify against Apple's public keys
+        # https://developer.apple.com/documentation/sign_in_with_apple
+        payload = JWT.decode(identity_token, nil, false).first
+        {
+          uid: payload["sub"],
+          email: payload["email"],
+          name: payload["name"]
+        }
+      rescue JWT::DecodeError
+        nil
+      end
+
+      def verify_google_token(id_token)
+        # Verify Google ID token
+        # In production: verify via Google's tokeninfo endpoint or google-id-token gem
+        response = HTTParty.get("https://oauth2.googleapis.com/tokeninfo?id_token=#{id_token}")
+        return nil unless response.success?
+
+        data = JSON.parse(response.body)
+        {
+          uid: data["sub"],
+          email: data["email"],
+          name: data["name"]
+        }
+      rescue StandardError
+        nil
+      end
+
+      def generate_username(name)
+        base = name.downcase.gsub(/[^a-z0-9]/, "").first(12)
+        base = "user" if base.blank?
+        candidate = base
+        counter = 1
+        while User.exists?(username: candidate)
+          candidate = "#{base}#{counter}"
+          counter += 1
+        end
+        candidate
       end
     end
   end

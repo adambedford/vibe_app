@@ -6,6 +6,7 @@ Rails.application.routes.draw do
       # Auth
       post   "auth/register",        to: "auth#register"
       post   "auth/login",           to: "auth#login"
+      post   "auth/oauth",            to: "auth#oauth"
       post   "auth/refresh",         to: "auth#refresh"
       delete "auth/logout",          to: "auth#logout"
 
