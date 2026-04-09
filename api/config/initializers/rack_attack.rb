@@ -1,3 +1,6 @@
+# Allow health checks through without rate limiting
+Rack::Attack.safelist("health-check") { |req| req.path == "/up" }
+
 Rack::Attack.throttle("api/ip", limit: 300, period: 5.minutes) { |req| req.ip }
 
 Rack::Attack.throttle("api/user", limit: 60, period: 1.minute) do |req|
