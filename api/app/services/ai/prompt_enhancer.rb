@@ -1,3 +1,5 @@
+require "ostruct"
+
 module AI
   class PromptEnhancer
     SYSTEM_PROMPT = <<~PROMPT
