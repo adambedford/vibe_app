@@ -4,12 +4,16 @@
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   echo "==> DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES (length='${#DATABASE_URL}')' || echo 'NO - EMPTY')"
   ./bin/rails db:prepare
+  # Ensure multi-database schemas (cache, queue, cable) are loaded
+  ./bin/rails db:prepare:cache db:prepare:queue db:prepare:cable 2>/dev/null || true
 fi
 
 # For workers (solid_queue), also run db:prepare
 if [ "${@: -1:1}" == "solid_queue:start" ]; then
   echo "==> DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES (length='${#DATABASE_URL}')' || echo 'NO - EMPTY')"
   ./bin/rails db:prepare
+  # Ensure multi-database schemas (cache, queue, cable) are loaded
+  ./bin/rails db:prepare:cache db:prepare:queue db:prepare:cable 2>/dev/null || true
 fi
 
 exec "${@}"
