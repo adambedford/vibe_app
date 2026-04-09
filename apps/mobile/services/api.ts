@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/stores/authStore';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 type RequestOptions = {
   method?: string;
