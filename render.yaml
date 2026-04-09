@@ -35,9 +35,7 @@ services:
       - key: SECRET_KEY_BASE
         value: fd75f654ad7c31e3dceec5a3c4e97e72fcccbb08d0aa1abfbbd53fd248c6ddbcbe81364c2be916d59c3f24616923f9b15d8c8acb2bbc5ae5e13602c253003fbe
       - key: DATABASE_URL
-        fromDatabase:
-          name: vibe-db-staging
-          property: connectionString
+        value: postgresql://vibe_staging_user:Z2KCZzhenRUf9mL0UEoGMskPXgYmuy8G@dpg-d7bf1scvjg8s73brko80-a/vibe_staging
       - key: RAILS_MASTER_KEY
         value: e8478a77b2bef2a1e95f04a9f25a8d4a
       # GCP — fill after running setup-gcp.sh
@@ -96,9 +94,7 @@ services:
       - key: SECRET_KEY_BASE
         value: fd75f654ad7c31e3dceec5a3c4e97e72fcccbb08d0aa1abfbbd53fd248c6ddbcbe81364c2be916d59c3f24616923f9b15d8c8acb2bbc5ae5e13602c253003fbe
       - key: DATABASE_URL
-        fromDatabase:
-          name: vibe-db-staging
-          property: connectionString
+        value: postgresql://vibe_staging_user:Z2KCZzhenRUf9mL0UEoGMskPXgYmuy8G@dpg-d7bf1scvjg8s73brko80-a/vibe_staging
       - key: RAILS_MASTER_KEY
         value: e8478a77b2bef2a1e95f04a9f25a8d4a
       - key: FIREBASE_PROJECT_ID
@@ -163,9 +159,7 @@ services:
       - key: SECRET_KEY_BASE
         value: 07b51f9ec22d5f100d4c21635f2320ca287b5386657ee35e38165cfcb664b67428466496b72718ed0e28c34965eea99503aa53e636c33506501fa1d8f7bf6724
       - key: DATABASE_URL
-        fromDatabase:
-          name: vibe-db-production
-          property: connectionString
+        value: postgresql://vibe_production_79ao_user:YsOLxKKYbMgiayaYC5KIuFJUmNdq1D0z@dpg-d7bf1scvjg8s73brko8g-a/vibe_production_79ao
       - key: RAILS_MASTER_KEY
         value: e8478a77b2bef2a1e95f04a9f25a8d4a
       - key: FIREBASE_PROJECT_ID
@@ -216,9 +210,7 @@ services:
       - key: SECRET_KEY_BASE
         value: 07b51f9ec22d5f100d4c21635f2320ca287b5386657ee35e38165cfcb664b67428466496b72718ed0e28c34965eea99503aa53e636c33506501fa1d8f7bf6724
       - key: DATABASE_URL
-        fromDatabase:
-          name: vibe-db-production
-          property: connectionString
+        value: postgresql://vibe_production_79ao_user:YsOLxKKYbMgiayaYC5KIuFJUmNdq1D0z@dpg-d7bf1scvjg8s73brko8g-a/vibe_production_79ao
       - key: RAILS_MASTER_KEY
         value: e8478a77b2bef2a1e95f04a9f25a8d4a
       - key: FIREBASE_PROJECT_ID
