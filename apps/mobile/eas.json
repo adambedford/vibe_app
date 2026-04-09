@@ -14,14 +14,14 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://staging-api.vibe.app"
+        "EXPO_PUBLIC_API_URL": "https://vibe-api-staging.onrender.com"
       }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.vibe.app"
+        "EXPO_PUBLIC_API_URL": "https://vibe-api-production.onrender.com"
       }
     }
   },
