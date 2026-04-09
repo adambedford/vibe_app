@@ -1,0 +1,268 @@
+# Render Blueprint — Infrastructure as Code
+# Deploy both staging and production with `render blueprint apply`
+# Docs: https://docs.render.com/infrastructure-as-code
+
+# ─── STAGING ────────────────────────────────────────────────
+
+databases:
+  - name: vibe-db-staging
+    plan: starter
+    databaseName: vibe_staging
+    postgresMajorVersion: "16"
+    region: oregon
+
+  - name: vibe-db-production
+    plan: standard
+    databaseName: vibe_production
+    postgresMajorVersion: "16"
+    region: oregon
+
+services:
+  # ─── STAGING: Rails API ───────────────────────────────────
+  - type: web
+    name: vibe-api-staging
+    runtime: docker
+    region: oregon
+    plan: starter
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        value: fd75f654ad7c31e3dceec5a3c4e97e72fcccbb08d0aa1abfbbd53fd248c6ddbcbe81364c2be916d59c3f24616923f9b15d8c8acb2bbc5ae5e13602c253003fbe
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibe-db-staging
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        value: e8478a77b2bef2a1e95f04a9f25a8d4a
+      # GCP — fill after running setup-gcp.sh
+      - key: FIREBASE_PROJECT_ID
+        value: vibe-staging
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: GCS_PROJECT_ID
+        sync: false
+      - key: GCS_CREDENTIALS_JSON
+        sync: false
+      - key: GCS_BUCKET_BUNDLES
+        value: vibe-app-bundles-staging
+      - key: GCS_BUCKET_THUMBNAILS
+        value: vibe-thumbnails-staging
+      - key: GCS_BUCKET_AVATARS
+        value: vibe-avatars-staging
+      # AWS Bedrock — fill after running setup-aws.sh
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      # Validator sidecar (Render private networking)
+      # Render private services are reachable at http://<name>:<port> within the project
+      - key: VALIDATOR_SERVICE_URL
+        value: http://vibe-validator-staging:3001
+      # Sentry — fill after creating project
+      - key: SENTRY_DSN
+        sync: false
+      # Amplitude — fill after creating project
+      - key: AMPLITUDE_API_KEY
+        sync: false
+      # Expo push
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+      # Slack (optional)
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+
+  # ─── STAGING: SolidQueue Worker ───────────────────────────
+  - type: worker
+    name: vibe-worker-staging
+    runtime: docker
+    region: oregon
+    plan: starter
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    dockerCommand: bundle exec rails solid_queue:start
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        value: fd75f654ad7c31e3dceec5a3c4e97e72fcccbb08d0aa1abfbbd53fd248c6ddbcbe81364c2be916d59c3f24616923f9b15d8c8acb2bbc5ae5e13602c253003fbe
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibe-db-staging
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        value: e8478a77b2bef2a1e95f04a9f25a8d4a
+      - key: FIREBASE_PROJECT_ID
+        value: vibe-staging
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: GCS_PROJECT_ID
+        sync: false
+      - key: GCS_CREDENTIALS_JSON
+        sync: false
+      - key: GCS_BUCKET_BUNDLES
+        value: vibe-app-bundles-staging
+      - key: GCS_BUCKET_THUMBNAILS
+        value: vibe-thumbnails-staging
+      - key: GCS_BUCKET_AVATARS
+        value: vibe-avatars-staging
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: VALIDATOR_SERVICE_URL
+        value: http://vibe-validator-staging:3001
+      - key: SENTRY_DSN
+        sync: false
+      - key: AMPLITUDE_API_KEY
+        sync: false
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+
+  # ─── STAGING: Playwright Validator Sidecar ────────────────
+  - type: pserv
+    name: vibe-validator-staging
+    runtime: docker
+    region: oregon
+    plan: starter
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./validator/Dockerfile
+    dockerContext: ./validator
+    envVars:
+      - key: PORT
+        value: "3001"
+
+  # ─── PRODUCTION: Rails API ────────────────────────────────
+  - type: web
+    name: vibe-api-production
+    runtime: docker
+    region: oregon
+    plan: standard
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    healthCheckPath: /up
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        value: 07b51f9ec22d5f100d4c21635f2320ca287b5386657ee35e38165cfcb664b67428466496b72718ed0e28c34965eea99503aa53e636c33506501fa1d8f7bf6724
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibe-db-production
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        value: e8478a77b2bef2a1e95f04a9f25a8d4a
+      - key: FIREBASE_PROJECT_ID
+        value: vibe-production
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: GCS_PROJECT_ID
+        sync: false
+      - key: GCS_CREDENTIALS_JSON
+        sync: false
+      - key: GCS_BUCKET_BUNDLES
+        value: vibe-app-bundles
+      - key: GCS_BUCKET_THUMBNAILS
+        value: vibe-thumbnails
+      - key: GCS_BUCKET_AVATARS
+        value: vibe-avatars
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: VALIDATOR_SERVICE_URL
+        value: http://vibe-validator-production:3001
+      - key: SENTRY_DSN
+        sync: false
+      - key: AMPLITUDE_API_KEY
+        sync: false
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+
+  # ─── PRODUCTION: SolidQueue Worker ────────────────────────
+  - type: worker
+    name: vibe-worker-production
+    runtime: docker
+    region: oregon
+    plan: standard
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    dockerCommand: bundle exec rails solid_queue:start
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: SECRET_KEY_BASE
+        value: 07b51f9ec22d5f100d4c21635f2320ca287b5386657ee35e38165cfcb664b67428466496b72718ed0e28c34965eea99503aa53e636c33506501fa1d8f7bf6724
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vibe-db-production
+          property: connectionString
+      - key: RAILS_MASTER_KEY
+        value: e8478a77b2bef2a1e95f04a9f25a8d4a
+      - key: FIREBASE_PROJECT_ID
+        value: vibe-production
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+      - key: GCS_PROJECT_ID
+        sync: false
+      - key: GCS_CREDENTIALS_JSON
+        sync: false
+      - key: GCS_BUCKET_BUNDLES
+        value: vibe-app-bundles
+      - key: GCS_BUCKET_THUMBNAILS
+        value: vibe-thumbnails
+      - key: GCS_BUCKET_AVATARS
+        value: vibe-avatars
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: VALIDATOR_SERVICE_URL
+        value: http://vibe-validator-production:3001
+      - key: SENTRY_DSN
+        sync: false
+      - key: AMPLITUDE_API_KEY
+        sync: false
+      - key: EXPO_ACCESS_TOKEN
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+
+  # ─── PRODUCTION: Playwright Validator Sidecar ─────────────
+  - type: pserv
+    name: vibe-validator-production
+    runtime: docker
+    region: oregon
+    plan: standard
+    repo: https://github.com/adambedford/vibe_app.git
+    branch: main
+    dockerfilePath: ./validator/Dockerfile
+    dockerContext: ./validator
+    envVars:
+      - key: PORT
+        value: "3001"
+
