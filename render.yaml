@@ -6,13 +6,13 @@
 
 databases:
   - name: vibe-db-staging
-    plan: starter
+    plan: basic-256mb
     databaseName: vibe_staging
     postgresMajorVersion: "16"
     region: oregon
 
   - name: vibe-db-production
-    plan: standard
+    plan: basic-4gb
     databaseName: vibe_production
     postgresMajorVersion: "16"
     region: oregon
@@ -265,4 +265,3 @@ services:
     envVars:
       - key: PORT
         value: "3001"
-
