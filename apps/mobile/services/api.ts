@@ -81,6 +81,7 @@ export const me = {
   get: () => request<any>('/api/v1/me'),
   update: (params: { display_name?: string; username?: string; bio?: string }) =>
     request<any>('/api/v1/me', { method: 'PATCH', body: params }),
+  creations: () => request<any>('/api/v1/me/creations'),
 };
 
 // Users
@@ -120,9 +121,19 @@ export const apps = {
 };
 
 // Creation
+export type CreateParams = {
+  prompt?: string;
+  source_app_id?: number;
+  category?: string;
+  visual_theme?: string;
+  content_theme?: string;
+  details?: string;
+  wizard_version?: number;
+};
+
 export const creation = {
-  create: (prompt?: string, sourceAppId?: number) =>
-    request<any>('/api/v1/create/sessions', { method: 'POST', body: { prompt, source_app_id: sourceAppId } }),
+  create: (params: CreateParams) =>
+    request<any>('/api/v1/create/sessions', { method: 'POST', body: params }),
   get: (id: number) => request<any>(`/api/v1/create/sessions/${id}`),
   message: (id: number, content: string) =>
     request<any>(`/api/v1/create/sessions/${id}/message`, { method: 'POST', body: { content } }),

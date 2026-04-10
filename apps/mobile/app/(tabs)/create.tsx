@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TextInput, Pressable, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { Text, H1, Caption } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
@@ -44,6 +44,12 @@ const CONTENT_THEMES: Record<string, string[]> = {
 
 export default function CreateScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{
+    category?: string;
+    visual_theme?: string;
+    content_theme?: string;
+    details?: string;
+  }>();
   const { isAuthenticated } = useAuthStore();
   const { showSignUpWall, signUpWallVisible, hideSignUpWall, signUpWallTrigger } = useAnonymousStore();
 
@@ -53,6 +59,26 @@ export default function CreateScreen() {
   const [contentTheme, setContentTheme] = useState('');
   const [details, setDetails] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Prefill from params (for "Start Over" flow)
+  useEffect(() => {
+    if (params.category) {
+      setCategory(params.category);
+      setStep(1);
+    }
+    if (params.visual_theme) {
+      setVisualTheme(params.visual_theme);
+      setStep(2);
+    }
+    if (params.content_theme) {
+      setContentTheme(params.content_theme);
+      setStep(3);
+    }
+    if (params.details) {
+      setDetails(params.details);
+      setStep(3);
+    }
+  }, [params.category, params.visual_theme, params.content_theme, params.details]);
 
   if (!isAuthenticated) {
     return (
@@ -84,8 +110,16 @@ export default function CreateScreen() {
       trackWalkthroughCompleted({ category, visualTheme, contentTheme });
       trackCreationStarted('walkthrough');
 
-      await creation.create(prompt);
-      router.push('/');
+      const response = await creation.create({
+        prompt,
+        category: category || undefined,
+        visual_theme: visualTheme || undefined,
+        content_theme: contentTheme || undefined,
+        details: details || undefined,
+        wizard_version: 1,
+      });
+      const sessionId = response.data.id;
+      router.push(`/create/${sessionId}`);
     } catch (e) {
       console.error(e);
     } finally {

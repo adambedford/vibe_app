@@ -30,6 +30,12 @@ class GenerateFromPlanJob < ApplicationJob
     elsif pass < MAX_FIX_PASSES
       retry_generation(session, html, result, firebase, pass)
     else
+      session.add_error(
+        error_type: "validation_failed",
+        message: "We tried #{MAX_FIX_PASSES} times but couldn't get it working. Try a simpler idea.",
+        details: result.failures.to_json,
+        retryable: false
+      )
       session.update!(status: "failed")
       firebase.update_status(session.id, status: "failed", error: "Generation failed after #{MAX_FIX_PASSES} fix attempts")
       AnalyticsTracker.track_generation(user_id: session.user_id, session_id: session.id,
@@ -74,7 +80,12 @@ class GenerateFromPlanJob < ApplicationJob
     firebase.update_status(session.id, status: "retrying", progress: 85 + (pass * 3))
     fix_instructions = AI::ErrorInterpreter.call(result.failures)
     session.increment!(:fix_passes)
-    session.update!(error_log: (session.error_log || []) + [ result.failures ])
+    session.add_error(
+      error_type: "validation_failed",
+      message: "Fixing issues... (attempt #{pass + 1} of #{MAX_FIX_PASSES})",
+      details: result.failures.to_json,
+      retryable: true
+    )
 
     retried_html = AI::Generator.call(
       plan: session.plan,

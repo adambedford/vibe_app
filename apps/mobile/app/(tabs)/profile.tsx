@@ -1,4 +1,4 @@
-import { FlatList, View } from 'react-native';
+import { FlatList, View, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
@@ -6,8 +6,9 @@ import { Text, H1, H2, Caption, Mono } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { useAuthStore } from '@/stores/authStore';
-import { users } from '@/services/api';
+import { users, me } from '@/services/api';
 import FeedCard from '@/components/feed/FeedCard';
+import { CreationTile } from '@/components/creation/CreationTile';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -17,6 +18,12 @@ export default function ProfileScreen() {
     queryKey: ['my-apps', user?.id],
     queryFn: () => users.apps(user!.id),
     enabled: !!user?.id,
+  });
+
+  const { data: creationsData } = useQuery({
+    queryKey: ['my-creations'],
+    queryFn: () => me.creations(),
+    enabled: isAuthenticated,
   });
 
   if (!isAuthenticated || !user) {
@@ -32,6 +39,12 @@ export default function ProfileScreen() {
   }
 
   const myApps = appsData?.data ?? [];
+  const myCreations = creationsData?.data ?? [];
+
+  // Filter to show non-published creations (drafts, in-progress, failed)
+  const activeCreations = myCreations.filter(
+    (c: any) => c.status !== 'completed' || !c.app_id
+  );
 
   return (
     <View className="flex-1 bg-void dark:bg-void">
@@ -83,6 +96,31 @@ export default function ProfileScreen() {
             <Button variant="ghost" onPress={logout} className="mt-4">
               <Text className="text-error text-[14px]">Sign Out</Text>
             </Button>
+
+            {/* My Creations */}
+            {activeCreations.length > 0 && (
+              <View className="w-full mt-6">
+                <Text className="text-text-muted text-[12px] uppercase tracking-wider mb-3">
+                  My Creations
+                </Text>
+                <View className="flex-row flex-wrap justify-between">
+                  {activeCreations.map((session: any) => (
+                    <CreationTile
+                      key={session.id}
+                      session={session}
+                      onPress={() => router.push(`/create/${session.id}`)}
+                    />
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Published Apps Header */}
+            {myApps.length > 0 && (
+              <Text className="w-full text-text-muted text-[12px] uppercase tracking-wider mt-6 mb-3">
+                Published Apps
+              </Text>
+            )}
           </View>
         }
       />

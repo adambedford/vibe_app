@@ -33,13 +33,28 @@ const COMPLETED_STAGES = ['enhancing', 'planning', 'generating', 'validating'];
 type Props = {
   status: string;
   progress?: number;
+  error?: { type: string; message: string; retryable: boolean } | null;
+  fixPasses?: number;
+  maxFixPasses?: number;
   onViewApp?: () => void;
   onDismiss?: () => void;
 };
 
-export default function GenerationProgress({ status, progress, onViewApp, onDismiss }: Props) {
+export default function GenerationProgress({
+  status,
+  progress,
+  error,
+  fixPasses,
+  maxFixPasses = 3,
+  onViewApp,
+  onDismiss
+}: Props) {
   const displayProgress = progress ?? STAGE_PROGRESS[status] ?? 0;
-  const label = STAGE_LABELS[status] || status;
+  const isRetrying = status === 'retrying';
+  const retryLabel = isRetrying && fixPasses
+    ? `Fixing issues... (attempt ${fixPasses} of ${maxFixPasses})`
+    : STAGE_LABELS[status];
+  const label = retryLabel || status;
   const isComplete = status === 'complete';
   const isFailed = status === 'failed';
 
@@ -49,13 +64,19 @@ export default function GenerationProgress({ status, progress, onViewApp, onDism
         {isComplete ? '🎉' : isFailed ? '😔' : '🚀'}
       </Text>
 
-      <H1 className="text-center mb-5">
+      <H1 className="text-center mb-3">
         {isComplete
           ? 'Your app is ready!'
           : isFailed
-          ? "We couldn't build that one"
+          ? 'Something went wrong'
           : 'Building your app...'}
       </H1>
+
+      {isFailed && error?.message && (
+        <Text className="text-text-secondary text-center mb-5 px-4">
+          {error.message}
+        </Text>
+      )}
 
       {!isComplete && !isFailed && (
         <Progress value={displayProgress} className="w-full mb-3" variant="default" />
@@ -95,8 +116,8 @@ export default function GenerationProgress({ status, progress, onViewApp, onDism
       )}
 
       {isFailed && onDismiss && (
-        <Button variant="ghost" onPress={onDismiss}>
-          Try again
+        <Button onPress={onDismiss} className="w-full">
+          Start Over
         </Button>
       )}
 

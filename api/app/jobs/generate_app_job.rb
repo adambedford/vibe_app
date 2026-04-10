@@ -10,8 +10,13 @@ class GenerateAppJob < ApplicationJob
     enhanced = AI::PromptEnhancer.call(session.messages, session.source_app)
 
     if enhanced.rejected
+      session.add_error(
+        error_type: "content_rejected",
+        message: "This content isn't allowed. Try a different idea.",
+        retryable: false
+      )
       session.update!(status: "failed")
-      firebase.update_status(session_id, status: "failed", error: "Content not allowed")
+      firebase.update_status(session_id, status: "failed", error: "This content isn't allowed. Try a different idea.")
       return
     end
 

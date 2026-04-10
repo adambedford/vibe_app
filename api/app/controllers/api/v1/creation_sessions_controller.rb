@@ -16,15 +16,24 @@ module Api
           category: nil
         )
 
+        form_inputs = {
+          category: params[:category],
+          visual_theme: params[:visual_theme],
+          content_theme: params[:content_theme],
+          details: params[:details],
+          wizard_version: params[:wizard_version] || 1
+        }.compact
+
         session = CreationSession.create!(
           user: current_user,
           app: app,
           source_app: source_app,
-          status: "active"
+          status: "active",
+          form_inputs: form_inputs.presence
         )
 
         if params[:prompt].present?
-          session.update!(messages: [ { role: "user", content: params[:prompt] } ])
+          session.update!(messages: [{ role: "user", content: params[:prompt] }])
           GenerateAppJob.perform_later(session.id)
         end
 
@@ -51,10 +60,9 @@ module Api
 
       def approve
         authorize!(record, :update)
-        record.update!(plan_approved: true)
-        if params[:modifications].present?
-          record.update!(messages: record.messages + [ { role: "user", content: params[:modifications] } ])
-        end
+        attrs = { plan_approved: true }
+        attrs[:messages] = record.messages + [{ role: "user", content: params[:modifications] }] if params[:modifications].present?
+        record.update!(attrs)
         GenerateFromPlanJob.perform_later(record.id)
         render_resource(record)
       end

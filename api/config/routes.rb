@@ -11,7 +11,9 @@ Rails.application.routes.draw do
       delete "auth/logout",          to: "auth#logout"
 
       # Current user
-      resource :me, controller: "me", only: [ :show, :update, :destroy ]
+      resource :me, controller: "me", only: [ :show, :update, :destroy ] do
+        get :creations
+      end
 
       # Users
       resources :users, only: [ :show ] do

@@ -19,6 +19,13 @@ module Api
         render_ok(message: "Account scheduled for deletion")
       end
 
+      def creations
+        sessions = current_user.creation_sessions
+          .includes(:app)
+          .order(created_at: :desc)
+        render_collection(sessions, presenter: CreationSessionPresenter)
+      end
+
       private
 
       def me_params
