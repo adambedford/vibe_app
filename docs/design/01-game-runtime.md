@@ -126,32 +126,36 @@ Kept deliberately small. Every method is something a model has to use correctly,
 
 ```ts
 // Lifecycle (required in every game)
+await vibe.connect(): Promise<Init>             // handshake; gives player, context (mode, daily day + seed, challenge) and initial state
 vibe.loading(progress: number): void            // 0..1, drives the host's loading UI
 vibe.firstFrame(): void                         // something is drawn; the host can swap the poster for the live frame
-await vibe.ready(): Promise<Init>               // game can accept input; host starts timers
-vibe.onPause(cb): void                          // host: scrolled away, app backgrounded, overlay opened
-vibe.onResume(cb): void
-vibe.onAudio(cb: (enabled: boolean) => void)   // the host owns mute; games must obey
-vibe.start(): void                              // a run began (first input after ready, or restart)
+vibe.ready(): void                              // game can accept input; host starts timers
+vibe.start(): void                              // a run began (first input after ready, or after a restart)
 vibe.end(result: { outcome: "win" | "lose" | "complete" | "quit"; score?: number }): void
-                                                // a run finished; enables replay, challenge and completion metrics
+vibe.onPause(cb) / vibe.onResume(cb)            // host: scrolled away, app backgrounded, overlay opened
+vibe.onAudio(cb: (enabled: boolean) => void)    // the host owns mute; called on connect and on every change
+vibe.onFocus(cb: (focused: boolean) => void)    // feed: attract mode until the player taps in
+vibe.onRestart(cb)                              // the host's "Play again"
 
-// Identity (read-only, from Init)
+// Identity and context (after connect)
 vibe.player   // { id: string /* per-game */, guest: boolean }
-vibe.context  // { mode: "feed" | "focus" | "studio" | "challenge"; challenge?: { score: number; seed: string } }
-              // the host shows who sent the challenge; the game only needs the target and the seed
+vibe.context  // { mode: "feed" | "focus" | "studio" | "test"; daily: { day, seed }; challenge?: { score, seed } }
 
 // Capabilities (must be declared in game.json)
-await vibe.saves.get(key): Promise<Json | null>        // ≤ 64 KB per game per player in total
-await vibe.saves.set(key, value): Promise<void>
-await vibe.scores.submit(value, opts?: { board?: string }): Promise<{ rank?: number; best: number }>
+await vibe.saves.get(key) / vibe.saves.set(key, value) // ≤ 64 KB per game per player in total
+await vibe.scores.submit(value, opts?: { board?: string }): Promise<{ best: number; rank?: number; improved: boolean }>
 await vibe.scores.top(opts?: { board?: string; scope?: "global" | "friends" | "today"; limit?: number })
                                                        // ranks and scores only; marks the player's own entry
 vibe.scores.show(opts?: { board?: string }): void      // host overlay with names and avatars
 vibe.events.track(name: StandardEvent | `custom.${string}`, props?: Record<string, string | number | boolean>)
-vibe.random(seed?: string): () => number               // seeded PRNG; seed comes from the challenge or daily seed when present
 vibe.share(opts?: { text?: string; score?: number }): void   // host shows its own share sheet with a challenge link
+
+// Utilities
+vibe.random(seed: string): () => number                // seeded PRNG (render-side; rules keep their own generator in state)
+vibe.newSeed(): string                                 // the challenge seed when present, otherwise a fresh one
 ```
+
+As built in step 1 (`packages/sdk`, 3.4 KB minified). Boards are declared per game in `game.json` with an order (`desc` for points, `asc` for times), a format and a period (`all` or `day`).
 
 Notes:
 

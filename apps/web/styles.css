@@ -1,0 +1,132 @@
+:root {
+  --bg: #0d0d12;
+  --panel: #1a1a24;
+  --text: #f4f4f7;
+  --muted: #a3a3b5;
+  --accent: #ff6b57;
+  --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+body { overflow: hidden; overscroll-behavior: none; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+/* ---------- Feed ---------- */
+.feed {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.feed::-webkit-scrollbar { display: none; }
+.feed.locked { overflow: hidden; touch-action: none; }
+
+.stage {
+  position: relative;
+  height: 100dvh;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background: #15151d;
+}
+.play-page .stage { max-width: none; }
+
+.poster, .poster-fallback, .slot { position: absolute; inset: 0; width: 100%; height: 100%; }
+.poster { object-fit: cover; transition: opacity 0.25s; z-index: 1; }
+.poster.missing { display: none; }
+.poster-fallback {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px; font-weight: 800; color: #3a3a4d;
+  background: radial-gradient(circle at 50% 40%, #2a2a3a, #15151d 70%);
+}
+.slot { z-index: 2; opacity: 0; transition: opacity 0.25s; }
+.stage.live .slot { opacity: 1; }
+.stage.live .poster { opacity: 0; }
+
+/* The tap layer sits over the game in the feed, so swipes scroll the feed. */
+.tap-layer {
+  position: absolute; inset: 0; z-index: 3; width: 100%;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 150px;
+  touch-action: pan-y;
+}
+.stage.focused .tap-layer { display: none; }
+.tap-cta {
+  background: rgba(255, 255, 255, 0.92); color: #111;
+  padding: 12px 22px; border-radius: 999px;
+  font-weight: 800; font-size: 17px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  animation: breathe 1.8s ease-in-out infinite;
+}
+@keyframes breathe { 50% { transform: scale(1.06); } }
+
+.meta {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+  padding: 60px 18px max(22px, env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+  pointer-events: none;
+}
+.stage.focused .meta { display: none; }
+.meta-title { font-size: 22px; font-weight: 800; }
+.meta-desc { font-size: 14px; color: #ddd; margin-top: 4px; line-height: 1.35; }
+.badge {
+  display: inline-block; margin: 0 6px 6px 0; padding: 3px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 800; background: var(--accent); color: #fff;
+}
+.badge.challenge { background: #ffd84d; color: #222; }
+
+/* ---------- Chrome ----------
+   In the feed the bar floats over the preview. In focus mode it becomes solid and the
+   game starts below it, so platform controls never cover game UI. */
+:root { --bar: calc(max(8px, env(safe-area-inset-top)) + 48px); }
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10; height: var(--bar);
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 0 12px 4px; max-width: 520px; margin: 0 auto;
+  pointer-events: none; transition: background 0.2s;
+}
+.topbar > * { pointer-events: auto; }
+.spacer { flex: 1; pointer-events: none; }
+.brand { font-weight: 900; font-size: 20px; letter-spacing: -0.03em; text-shadow: 0 2px 8px rgba(0,0,0,0.5); padding-bottom: 8px; }
+.chip {
+  background: rgba(20, 20, 28, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 999px; padding: 8px 14px; font-size: 15px; font-weight: 700; min-width: 44px; min-height: 40px;
+}
+.focus-only { display: none; }
+.in-focus .focus-only { display: inline-block; }
+.in-focus .feed-only { display: none; }
+.in-focus .topbar { background: var(--bg); }
+.feed .stage.focused .slot { top: var(--bar); height: auto; bottom: 0; }
+
+/* ---------- End card ---------- */
+.end-card {
+  position: absolute; z-index: 6; left: 12px; right: 12px; bottom: max(16px, env(safe-area-inset-bottom));
+  background: rgba(22, 22, 32, 0.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 22px; padding: 20px 18px 16px; text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  animation: rise 0.3s ease-out;
+}
+.end-card[hidden] { display: none; }
+@keyframes rise { from { transform: translateY(30px); opacity: 0; } }
+.end-close { position: absolute; top: 8px; right: 10px; width: 40px; height: 40px; color: var(--muted); font-size: 18px; }
+.end-title { font-size: 24px; font-weight: 800; }
+.end-score { font-size: 48px; font-weight: 900; font-variant-numeric: tabular-nums; margin: 4px 0; }
+.end-sub { color: var(--muted); min-height: 20px; font-size: 15px; }
+.end-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.btn { height: 48px; border-radius: 14px; background: #2b2b3b; font-weight: 800; font-size: 16px; }
+.btn.primary { background: var(--accent); color: #fff; }
+
+.feed-end { display: flex; align-items: center; justify-content: center; text-align: center; color: var(--muted); }
+
+.host-toast {
+  position: fixed; left: 50%; bottom: 90px; transform: translate(-50%, 10px); z-index: 20;
+  background: #fff; color: #111; padding: 10px 16px; border-radius: 999px; font-weight: 700;
+  max-width: 90vw; text-align: center; opacity: 0; pointer-events: none; transition: 0.2s;
+}
+.host-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.not-found { padding: 40px; text-align: center; }
+.not-found a { color: var(--accent); }

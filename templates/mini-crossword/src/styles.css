@@ -1,0 +1,121 @@
+/* Theme knobs. Change these to restyle the whole game. System fonts only (no network). */
+:root {
+  --paper: #fbf7f0;
+  --ink: #1f2933;
+  --muted: #6b7280;
+  --block: #26323d;
+  --line: #d8cfc2;
+  --entry: #ffe3d6;
+  --cursor: #ff6b57;
+  --cursor-ink: #ffffff;
+  --key: #efe7db;
+  --key-ink: #1f2933;
+  --solved: #b9e4c9;
+  --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: var(--font); }
+body { overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+
+#app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
+  gap: 10px;
+}
+
+header { display: flex; align-items: baseline; gap: 10px; padding: 0 4px; }
+.title { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; }
+.date { color: var(--muted); font-size: 14px; flex: 1; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 18px; }
+
+.board { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  width: min(100%, 52vh);
+  aspect-ratio: 1;
+  border: 3px solid var(--block);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--line);
+  gap: 2px;
+}
+.cell {
+  position: relative;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(22px, 7.5vmin, 44px);
+  transition: background 0.12s;
+}
+.cell.block { background: var(--block); }
+.cell.pop .ch { animation: pop 0.16s ease-out; }
+@keyframes pop { 50% { transform: scale(1.25); } }
+.cell .n { position: absolute; top: 3px; left: 5px; font-size: clamp(9px, 2.4vmin, 13px); font-weight: 700; color: var(--muted); }
+.cell.in-entry { background: var(--entry); }
+.cell.cursor { background: var(--cursor); color: var(--cursor-ink); }
+.cell.cursor .n { color: var(--cursor-ink); }
+
+.attract .cell.cursor { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { filter: brightness(1.15); transform: scale(0.96); } }
+
+.solved .cell:not(.block) { background: var(--solved); animation: wave 0.6s ease-out both; }
+@keyframes wave { 0% { transform: scale(1); } 40% { transform: scale(1.12) rotate(-3deg); } 100% { transform: scale(1); } }
+
+.cluebar {
+  display: flex;
+  align-items: stretch;
+  background: var(--entry);
+  border-radius: 12px;
+  min-height: 56px;
+}
+.cluebar .nav { width: 44px; font-size: 28px; font-weight: 700; color: var(--ink); }
+.clue { flex: 1; display: flex; align-items: center; gap: 10px; text-align: left; padding: 8px 4px; font-size: 16px; line-height: 1.25; }
+.clue .num { font-weight: 800; }
+
+.keyboard { display: flex; flex-direction: column; gap: 6px; }
+.krow { display: flex; gap: 5px; justify-content: center; }
+.key {
+  flex: 1;
+  max-width: 44px;
+  height: clamp(44px, 6.4vh, 56px);
+  border-radius: 7px;
+  background: var(--key);
+  color: var(--key-ink);
+  font-weight: 700;
+  font-size: 18px;
+}
+.key.wide { max-width: 66px; flex: 1.5; font-size: 20px; }
+.key:active { filter: brightness(0.9); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 18%;
+  transform: translate(-50%, -10px);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+.cluebar[hidden], .solvedbar[hidden] { display: none; }
+.solvedbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--solved); border-radius: 12px; min-height: 56px; padding: 8px 8px 8px 14px;
+}
+.solved-time { font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; }
+.solved-next { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.share { height: 42px; padding: 0 18px; border-radius: 10px; background: var(--cursor); color: #fff; font-weight: 800; font-size: 15px; }
+.solved .keyboard { visibility: hidden; }

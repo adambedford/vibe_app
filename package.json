@@ -1,0 +1,29 @@
+{
+  "name": "vibe",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "build": "tsx packages/build/src/cli.ts",
+    "serve": "tsx apps/edge/src/server.ts",
+    "dev": "pnpm build && pnpm serve",
+    "check": "tsx packages/checks/src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "new-game": "tsx packages/build/src/new-game.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@vibe/build": "workspace:*",
+    "@vibe/checks": "workspace:*",
+    "@vibe/host": "workspace:*",
+    "@vibe/protocol": "workspace:*",
+    "@vibe/sdk": "workspace:*",
+    "esbuild": "0.28.2",
+    "phaser": "4.2.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0",
+    "wordlist-english": "1.2.1"
+  }
+}

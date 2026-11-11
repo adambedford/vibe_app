@@ -1,0 +1,16 @@
+{
+  "contract": 1,
+  "sdk": "1.0.0",
+  "engine": { "name": "none", "version": "0" },
+  "title": "Daily 5×5",
+  "description": "A five-by-five crossword. One new puzzle a day, same for everyone. How fast can you solve it?",
+  "orientation": "portrait",
+  "input": ["tap", "keys"],
+  "capabilities": ["saves", "scores", "events", "share"],
+  "boards": {
+    "default": { "order": "asc", "format": "duration", "period": "day" }
+  },
+  "audio": false,
+  "daily": true,
+  "template": { "id": "mini-crossword", "version": "1" }
+}

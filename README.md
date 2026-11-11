@@ -1,15 +1,51 @@
 # Vibe (working name)
 
-A social app whose feed is made of small games. Each game plays as soon as it scrolls into view. Anyone can make one by describing it to an AI agent, usually starting from a template, and anyone can remix any game. Underneath sits a shared platform: identity, saves, leaderboards, challenges, analytics, and later multiplayer.
+A social app whose feed is made of small games. Each game plays as soon as it scrolls into view. Anyone can make one by describing it to an AI agent, usually starting from a template, and anyone can remix any game.
 
-There is no code yet. This is the design stage.
+This repo holds the design and the first working slice: the feed, the game sandbox, three templates and the playtest harness.
 
-## Read in this order
+## Run it
 
-1. [`docs/design/00-overview.md`](docs/design/00-overview.md): what has to be true, principles, system map, phases, open questions
-2. [`docs/design/01-game-runtime.md`](docs/design/01-game-runtime.md): the game contract, isolation, the host–game protocol, the SDK, the feed runtime
-3. [`docs/design/02-creation.md`](docs/design/02-creation.md): templates, the creation agent, the playtest harness, evals, remix
-4. [`docs/design/03-checks-and-safety.md`](docs/design/03-checks-and-safety.md): quality and safety checks, distribution tiers, compliance
-5. [`docs/design/04-platform-services.md`](docs/design/04-platform-services.md): identity, saves, social play, multiplayer, analytics, ranking, data model, stack
-6. [`docs/decisions.md`](docs/decisions.md): the decision log
-7. [`docs/legacy-v0-review.md`](docs/legacy-v0-review.md): what we kept from the earlier attempt (commit `3371204`) and why the rest was dropped
+Needs Node 22+ and pnpm 10.
+
+```bash
+pnpm install
+pnpm dev            # build everything, then serve on port 4100
+```
+
+Open **http://app.localhost:4100/** in Chrome or Firefox. Both resolve `*.localhost` to your machine. Use a narrow window or device emulation; the feed is built for phones.
+
+Other commands:
+
+```bash
+pnpm check          # build, then run every game through the playtest harness (also makes the feed posters)
+pnpm check hop      # just one game
+pnpm test           # unit tests: crossword rules and puzzle pack, edge security rules, protocol
+pnpm typecheck
+pnpm new-game hop cat-hop "Cat Hop"     # copy a template into games/ to make a new game
+pnpm tsx templates/mini-crossword/tools/fill.ts 20   # generate crossword grids
+```
+
+## What's here
+
+```
+apps/web/            the feed (index.html) and single-game page (play.html)
+apps/edge/           local server: app, engine CDN and per-game origins, with security headers
+packages/protocol/   the game contract: manifest and host–game message schemas
+packages/sdk/        `window.vibe`, the game-side SDK (3.4 KB), served from the engine CDN
+packages/host/       runs one game in a sandboxed iframe and checks every message it sends
+packages/build/      bundles a game into an immutable, content-hashed version
+packages/checks/     playtest harness: headless rule checks + browser checks
+templates/           hop (one-tap runner), dodge (drag to dodge), mini-crossword (daily 5×5)
+games/               games made from templates (empty for now)
+tests/               unit tests
+docs/                design, decisions, findings
+```
+
+## Read next
+
+1. [`docs/design/00-overview.md`](docs/design/00-overview.md): what has to be true, principles, phases, open questions
+2. [`docs/spikes/01-feed-runtime-templates.md`](docs/spikes/01-feed-runtime-templates.md): what step 1 built and what it found
+3. [`docs/design/01-game-runtime.md`](docs/design/01-game-runtime.md) to [`04-platform-services.md`](docs/design/04-platform-services.md): detailed design
+4. [`docs/decisions.md`](docs/decisions.md): the decision log
+5. Each template's `TEMPLATE.md`: how to make a new game from it

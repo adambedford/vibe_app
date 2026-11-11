@@ -1,0 +1,15 @@
+{
+  "contract": 1,
+  "sdk": "1.0.0",
+  "engine": { "name": "phaser", "version": "4.2.1" },
+  "title": "Dodge",
+  "description": "Drag to dodge the falling rocks and grab the stars. It only gets faster.",
+  "orientation": "portrait",
+  "input": ["drag-x"],
+  "capabilities": ["saves", "scores", "events", "share"],
+  "boards": {
+    "default": { "order": "desc", "format": "points", "period": "all" }
+  },
+  "audio": true,
+  "template": { "id": "dodge", "version": "1" }
+}

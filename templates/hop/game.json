@@ -1,0 +1,15 @@
+{
+  "contract": 1,
+  "sdk": "1.0.0",
+  "engine": { "name": "phaser", "version": "4.2.1" },
+  "title": "Hop",
+  "description": "Tap to jump, tap again to double jump. How far can you get?",
+  "orientation": "portrait",
+  "input": ["tap"],
+  "capabilities": ["saves", "scores", "events", "share"],
+  "boards": {
+    "default": { "order": "desc", "format": "points", "period": "all" }
+  },
+  "audio": true,
+  "template": { "id": "hop", "version": "1" }
+}
