@@ -20,6 +20,7 @@ Several well-funded teams are building close variants of this product. None has 
 | Wabi | "YouTube for apps" | Pivoted to a messenger with a personal agent in Sept 2026 | Its founder judged a standalone feed weaker than play inside conversation |
 | Rune | Multiplayer HTML5 games inside voice-chat rooms | iOS app last updated May 2025; site now pitches AI game creation | Its deterministic multiplayer SDK is the model to copy (see `04-platform-services.md`) |
 | Roblox Build, YouTube Playables Builder | Prompt-to-game inside very large platforms | Alpha and closed beta | Incumbents treat this as a feature. Roblox ranks for long-term retention to keep "AI slop" out of discovery |
+| Phaser Game Agent (Phaser Studio) | Prompt to game with code, art, sound, tests and a play link, built on Phaser AE, a closed engine designed for AI agents. Also callable from coding agents over MCP | Launched mid-2026; billed by build time, from $0.01 per minute | The makers of our default engine now run a competing creation tool. Making games is becoming a commodity, so the feed and social layer are where we can stand apart. We could also accept games built with other tools, as long as they meet our contract |
 | Gambo.ai | AI game builder | Reported shut down May 2026 (secondary source) | Generation is expensive to give away |
 
 What this means for us:
@@ -124,6 +125,7 @@ Real-time multiplayer for selected templates, creator monetisation, and a learne
 - Rune: [rune.ai](https://rune.ai), [App Store listing](https://apps.apple.com/app/1450358364)
 - Roblox Build: [TechCrunch, Jul 2026](https://techcrunch.com/2026/07/16/roblox-launches-an-ai-powered-game-creation-feature-in-its-mobile-app/)
 - YouTube Playables Builder: [9to5Google](https://9to5google.com/2025/12/23/youtube-playables-builder/)
+- Phaser Game Agent and Phaser AE: [Phaser news](https://phaser.io/news/2026/06/phaser-game-agent), [how it was built](https://phaser.io/news/2026/06/how-we-built-the-phaser-game-agent-with-claude-managed-agents-and-superserve), [MCP setup and pricing](https://phaser.io/news/2026/07/phaser-game-agent-mcp-setup), [engine licence](https://phaser.io/polyform-shield-license)
 - Gambo.ai closure (secondary source): [aiidelist](https://aiidelist.com/blog/why-gambo-ai-shut-down)
 - itch.io supply growth: [Aftermath](https://aftermath.site/itch-ai-games-pc-slop/)
 - RuneScape clone takedown: [Dexerto](https://www.dexerto.com/gaming/viral-ai-made-runescape-clone-shut-down-after-jagex-demands-takedown-3408509/)

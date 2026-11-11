@@ -36,6 +36,10 @@ Candidate first templates, chosen to cover different input styles:
 
 Later candidates: physics flinger (drag and release), stacker, rhythm, quiz or trivia, endless climber.
 
+**Logic and rendering are separate** (decision D25). Each template keeps game rules in a pure logic module: state plus inputs in, new state out, with seeded randomness, a fixed time step, and no clock, network or DOM. A rendering layer on top draws the state. The checks lint the logic module for these rules and run it headless in a JS isolate, far faster than real time. That gives replays, score verification, bot fuzzing and, later, a multiplayer server, with no change of language.
+
+**Blocks under templates** (decision D26). Templates are assembled from a library of tested mechanic blocks, such as one-tap jump physics, lane spawning, combo scoring and screen-shake on hit. Each block has docs, tunables and known pitfalls. The agent can compose blocks across genres, for example a merge mechanic in a runner. Successful games are mined for new blocks, which a person reviews before they enter the library. Phaser Studio describes building its agent the same way.
+
 **Blank start** uses a minimal template (engine, SDK lifecycle, an empty scene and a bot that only checks boot). The contract holds even from scratch.
 
 **Template upkeep.** Templates are versioned. Improvements reach new games and remixes, never existing ones. Each template has its own eval set (section 6).
