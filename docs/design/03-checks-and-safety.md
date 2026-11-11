@@ -69,7 +69,7 @@ Verified against primary sources on 2026-11-11. This is a summary for design pur
   - **4.7.4:** an index of every game, with metadata and universal links.
   - **4.7.5:** games above the app's age rating must be flagged and restricted by verified or declared age. So **every game needs an age rating**, which the content checks can propose.
 - **1.2 (user-generated content)** requires filtering, reporting with timely responses, blocking and published contact details. The October 2026 update extended it explicitly to "AI content creation apps". **1.2.1** treats casual games made by creators as UGC and requires age gating.
-- The WebKit requirement comes from 2.5.6 (apps that browse the web), not from 4.7.
+- The requirement to use WebKit sits in 2.5.6 (apps that browse the web). 4.7 itself no longer mentions it.
 - **Mini Apps Partner Program:** 85% of qualifying in-app purchases goes to the developer, with the conditions listed in `01-game-runtime.md` §6.
 
 Sources: [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), [4.7 update](https://developer.apple.com/news/?id=ey6d8onl), [Mini Apps Partner Program](https://developer.apple.com/programs/mini-apps-partner/), [October 2026 update](https://developer.apple.com/news/?id=92th7e5i).
@@ -106,5 +106,5 @@ Sources: [App Review Guidelines](https://developer.apple.com/app-store/review/gu
 
 1. **Every game carries an age rating**, proposed by the content checks and confirmed by human review above a threshold. The host filters by the user's age band.
 2. **Age assurance is a launch dependency in the UK,** and possibly in the EU later. Choose the minimum age and the launch geography together (`00-overview.md`, open questions 1 and 3).
-3. **Reporting, blocking, contact details and child safety standards** are required everywhere, so they belong in Phase 1, not Phase 2.
+3. **Reporting, blocking, contact details and child safety standards** are required everywhere, so they ship in Phase 1.
 4. **Free-text features** (comments, chat, DMs) add the most moderation burden. They stay out of V1 on purpose. The SDK has no chat.
