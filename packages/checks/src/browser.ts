@@ -6,7 +6,7 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import type { Browser, CDPSession, Frame, Page } from "playwright";
 import type { Edge } from "@vibe/build";
-import { DIST_APP } from "@vibe/build";
+import { POSTERS_DIR } from "@vibe/build";
 import type { CatalogItem } from "@vibe/build";
 import type { CheckResult } from "./logic.ts";
 import type { Driver, Playtest } from "./types.ts";
@@ -116,8 +116,8 @@ export async function checkInBrowser(
     // 2. Attract mode: poster, and is it alive?
     await page.waitForTimeout(1500);
     const stage = page.locator(".stage");
-    await mkdir(path.join(DIST_APP, "posters"), { recursive: true });
-    report.poster = path.join(DIST_APP, "posters", `${item.gameId}.png`);
+    await mkdir(POSTERS_DIR, { recursive: true });
+    report.poster = path.join(POSTERS_DIR, `${item.gameId}.png`);
     await iframe.screenshot({ path: report.poster });
     const a1 = await iframe.screenshot();
     await page.waitForTimeout(700);

@@ -29,14 +29,14 @@ const TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
 };
 
-const PERMISSIONS_POLICY =
+export const PERMISSIONS_POLICY =
   "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), " +
   "display-capture=(), clipboard-read=(), publickey-credentials-get=(), xr-spatial-tracking=()";
 
 export function gameCsp(o: Origins): string {
   return [
     "default-src 'none'",
-    `script-src 'self' ${o.engine} 'unsafe-inline' 'wasm-unsafe-eval'`,
+    `script-src 'self' ${new URL(o.engine).origin} 'unsafe-inline' 'wasm-unsafe-eval'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "media-src 'self' data: blob:",

@@ -8,6 +8,8 @@ export const DIST_ENGINE = path.join(DIST, "engine");
 export const DIST_GAMES = path.join(DIST, "games");
 export const TEMPLATES_DIR = path.join(ROOT, "templates");
 export const GAMES_DIR = path.join(ROOT, "games");
+/** Feed posters captured by `pnpm check`; committed so hosted builds have them. */
+export const POSTERS_DIR = path.join(ROOT, "apps/web/posters");
 
 export const PLATFORM_MARKER = "<!-- vibe:platform -->";
 

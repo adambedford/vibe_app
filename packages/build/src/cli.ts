@@ -3,13 +3,13 @@
  * the web app -> dist/app, plus dist/app/catalog.json listing each game's current version.
  */
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import * as esbuild from "esbuild";
 import { SDK_VERSION } from "@vibe/protocol";
 import { buildGame, type BuiltGame } from "./build-game.ts";
 import { sri } from "./edge.ts";
-import { DIST_APP, DIST_ENGINE, ENGINE_FILES, GAMES_DIR, ROOT, TEMPLATES_DIR, enginePath, sdkPath } from "./paths.ts";
+import { DIST_APP, DIST_ENGINE, ENGINE_FILES, GAMES_DIR, POSTERS_DIR, ROOT, TEMPLATES_DIR, enginePath, sdkPath } from "./paths.ts";
 
 export interface CatalogItem {
   gameId: string;
@@ -75,6 +75,7 @@ async function buildApp() {
   for (const f of ["index.html", "play.html", "styles.css"]) {
     await copyFile(path.join(ROOT, "apps/web", f), path.join(DIST_APP, f));
   }
+  if (existsSync(POSTERS_DIR)) await cp(POSTERS_DIR, path.join(DIST_APP, "posters"), { recursive: true });
 }
 
 export async function buildAll({ quiet = false } = {}) {
@@ -90,7 +91,7 @@ export async function buildAll({ quiet = false } = {}) {
       source: path.relative(ROOT, dir),
       manifest: g.manifest,
       bytes: g.bytes,
-      poster: existsSync(path.join(DIST_APP, "posters", `${gameId}.png`)) ? `/posters/${gameId}.png` : undefined,
+      poster: existsSync(path.join(POSTERS_DIR, `${gameId}.png`)) ? `/posters/${gameId}.png` : undefined,
     });
   }
   await buildApp();

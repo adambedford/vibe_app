@@ -10,7 +10,8 @@
     "check": "tsx packages/checks/src/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "new-game": "tsx packages/build/src/new-game.ts"
+    "new-game": "tsx packages/build/src/new-game.ts",
+    "export": "tsx packages/build/src/export.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
