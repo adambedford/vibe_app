@@ -47,7 +47,7 @@ docs/                design, decisions, findings
 
 ## Hosted test build
 
-- Feed: https://vibe-feed-app-seven.vercel.app (Vercel login required)
+- Feed: https://vibe-feed-app-seven.vercel.app (public to anyone with the link; pages are marked noindex)
 - Games: https://vibe-feed-games.vercel.app (public; game pages only load inside the feed)
 
 Both are Vercel projects built from this branch (`pnpm build && pnpm export app|games`, with `APP_ORIGIN` and `GAMES_ORIGIN` set). Games share one origin there; per-game subdomains need our own domain (decision D32).

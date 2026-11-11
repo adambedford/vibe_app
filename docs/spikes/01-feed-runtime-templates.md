@@ -67,4 +67,4 @@ These numbers are optimistic. Software WebGL on a server is not a mid-range phon
 - **Untested:** audio, and long tasks.
 - **The headless VM has no time limit on each step**, so a rules loop that never ends would hang the check.
 - **The per-game player ID is derived from a device ID in the browser.** In production the key lives on the server.
-- **Local hosting only.** Trying it on a phone needs a public deploy with wildcard subdomains for the per-game origins. That needs a domain; it's an open question.
+- **Hosted in path mode for now.** The phone test build runs on two `*.vercel.app` projects, where all games share one origin. Per-game subdomains need our own domain (decision D32).
