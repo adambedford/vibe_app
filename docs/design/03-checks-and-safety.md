@@ -1,6 +1,6 @@
 # Checks, safety and compliance
 
-Status: first draft. Policy items marked **[verify]** await the research pass.
+Status: first draft. Compliance facts were verified on 2026-11-11 (§6).
 
 ## 1. When checks run
 
@@ -26,6 +26,7 @@ Every new version of a published game goes through the publish checks again. Sma
 | Performance | Frame time, long tasks, heap growth | Warning; lowers feed ranking |
 | Content | Classifiers over screenshots, the video clip, generated assets, visible text and string literals in source | Yes for clear violations; human review for borderline cases |
 | IP and clones | Names, trademarks and famous characters in text, asset prompts and visuals (word list plus a judge model) | Yes if clear; flagged otherwise |
+| Age rating | Proposes a rating from the content results (Apple 4.7.5 requires games above the app's rating to be flagged and restricted) | No; sets who can see the game |
 | Quality rating | A judge model rates the clip for clarity and polish | Never blocks; sets the game's starting position in the exploration pool |
 
 Content categories: sexual content, violence beyond cartoon level, hate, self-harm, targeting real people, drugs, simulated gambling (it affects age ratings even when nothing is paid), and phishing patterns such as a fake login form.
@@ -57,12 +58,53 @@ Tiers bound the damage from anything the checks miss, and give the ranking syste
 
 ## 6. Age and compliance
 
-These depend on the minimum-age decision (`00-overview.md`, open question 1). The facts below are being verified.
+Verified against primary sources on 2026-11-11. This is a summary for design purposes and is not legal advice; a lawyer should review it before launch.
 
-- **Apple App Store.** Guideline 4.7 covers HTML5 mini games inside an app and sets conditions **[verify text]**. Guideline 1.2 requires apps with UGC to filter objectionable material, offer reporting, let users block abusive users, and publish contact information **[verify text]**. Apple reportedly launched a Mini Apps Partner Program in late 2025 **[verify]**.
-- **Google Play:** UGC policy and rules for apps hosting HTML5 content **[verify]**.
-- **UK Online Safety Act.** If the service is likely to be accessed by children in the UK, children's risk assessments and the Protection of Children Codes apply, including age assurance where needed **[verify dates and scope]**.
-- **EU Digital Services Act:** baseline duties for hosting services, such as notice and action, and statements of reasons for removals **[verify scope for small platforms]**.
-- **COPPA (US):** applies if we knowingly allow under-13s or target them. Simplest to exclude under-13s with an age gate and to design the product so it doesn't appeal to young children **[verify]**.
-- **Copyright and trademark.** Users will ask for clones of famous games and characters. A takedown process (in the US, a DMCA agent registration and policy) plus the IP check above.
-- **Free-text features** (comments, chat, DMs) add the most moderation burden. They are kept out of V1 on purpose. The SDK has no chat.
+### Apple App Store (guidelines last updated 16 October 2026)
+
+- **4.7** now explicitly covers "HTML5 and JavaScript mini apps and mini games" (wording added 13 November 2025). The app is responsible for all of them. Its conditions shape the product:
+  - **4.7.1:** follow the privacy rules, provide filtering, reporting with timely responses and blocking, and use Apple in-app purchase for digital goods.
+  - **4.7.2:** no exposing native APIs to games without Apple's permission. This is why haptics are out of SDK v1.
+  - **4.7.3:** no sharing data or permissions with a game without explicit consent each time. This is why games get only a per-game ID.
+  - **4.7.4:** an index of every game, with metadata and universal links.
+  - **4.7.5:** games above the app's age rating must be flagged and restricted by verified or declared age. So **every game needs an age rating**, which the content checks can propose.
+- **1.2 (user-generated content)** requires filtering, reporting with timely responses, blocking and published contact details. The October 2026 update extended it explicitly to "AI content creation apps". **1.2.1** treats casual games made by creators as UGC and requires age gating.
+- The WebKit requirement comes from 2.5.6 (apps that browse the web), not from 4.7.
+- **Mini Apps Partner Program:** 85% of qualifying in-app purchases goes to the developer, with the conditions listed in `01-game-runtime.md` §6.
+
+Sources: [App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), [4.7 update](https://developer.apple.com/news/?id=ey6d8onl), [Mini Apps Partner Program](https://developer.apple.com/programs/mini-apps-partner/), [October 2026 update](https://developer.apple.com/news/?id=92th7e5i).
+
+### Google Play
+
+- **UGC policy:** users accept terms before posting, the app moderates, and public UGC has in-app reporting and blocking ([policy](https://support.google.com/googleplay/android-developer/answer/9876937)).
+- **AI-generated content** needs in-app reporting or flagging ([policy](https://support.google.com/googleplay/android-developer/answer/13985936)).
+- **JavaScript running in a WebView** is exempt from the ban on downloaded code, as long as it doesn't enable policy violations ([policy](https://support.google.com/googleplay/android-developer/answer/9888379)).
+- **Child Safety Standards** (self-certified by social apps) require ([policy](https://support.google.com/googleplay/android-developer/answer/14747720)):
+  - published standards against child sexual abuse and exploitation
+  - an in-app way to report concerns
+  - acting on child sexual abuse material and reporting it to NCMEC or the relevant regional authority
+  - a named point of contact
+
+### UK Online Safety Act
+
+- **Already in force:** illegal-content duties since 17 March 2025, and the Protection of Children Codes since 25 July 2025.
+- **Children are presumed able to use the service** unless age verification or estimation means they "are not normally able to" (section 35). The test looks at actual users, not intended ones ([s.35](https://www.legislation.gov.uk/ukpga/2023/50/section/35)).
+- **A personalised feed counts as a recommender system.** If the risk assessment rates harmful content as medium or high risk, Ofcom expects **highly effective age assurance** to identify children and filter their feeds. Self-declared age doesn't count. Accepted methods include facial age estimation, photo ID, open banking, credit card and mobile operator checks ([Ofcom statement](https://www.ofcom.org.uk/online-safety/protecting-children/statement-age-assurance-and-childrens-access)).
+- **Implication:** any UK launch needs either an 18+ product with highly effective age assurance, or a children's risk assessment plus age-appropriate feeds. Either way, an age assurance vendor is a launch dependency for the UK.
+
+### EU
+
+- **Digital Services Act:** micro and small enterprises are exempt from the online-platform obligations (Articles 20–28, including Article 28 on minors), apart from Article 24(3). The baseline hosting duties still apply: contact points, terms, notice and action, and statements of reasons for removals. *This rests on secondary sources; EUR-Lex couldn't be fetched.*
+- **Proposed EU KIDS Act** (COM(2026) 681, 17 September 2026). This is a proposal, not law. It would explicitly cover platforms that "allow recipients to create video games", with **no small-company exemption**. It would restrict under-13s and set a harmonised minimum age of 15 for accounts on social services with risky features ([proposal PDF](https://ec.europa.eu/newsroom/repository/document/2026-38/Proposal_for_EU_KIDS_Act__EU_Keeping_Internet_Digital_Spaces_Accountable_and_Trustworthy_wh7RxWPSibRG6UlfmCMgsZvcEgc_132530.pdf)). Track it.
+
+### US
+
+- **COPPA:** the amended rule has been in force since 23 June 2025, with compliance required since 22 April 2026. It applies if the service is directed to children or we know we have users under 13 ([eCFR](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-C/part-312)). Exclude under-13s and design so the product doesn't target them.
+- **Copyright and trademark:** a DMCA designated agent, a takedown policy and a repeat-infringer policy. Rights holders move fast. Jagex had a viral AI-made RuneScape clone taken down within days in September 2026, and Bethesda sent a cease-and-desist over a vibe-coded Fallout game. A positive route helps: Remix ran a game jam with licensed IP only and rejected everything else.
+
+### Design consequences
+
+1. **Every game carries an age rating**, proposed by the content checks and confirmed by human review above a threshold. The host filters by the user's age band.
+2. **Age assurance is a launch dependency in the UK,** and possibly in the EU later. Choose the minimum age and the launch geography together (`00-overview.md`, open questions 1 and 3).
+3. **Reporting, blocking, contact details and child safety standards** are required everywhere, so they belong in Phase 1, not Phase 2.
+4. **Free-text features** (comments, chat, DMs) add the most moderation burden. They stay out of V1 on purpose. The SDK has no chat.

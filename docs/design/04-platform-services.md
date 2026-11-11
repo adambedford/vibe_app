@@ -6,13 +6,13 @@ Status: first draft.
 
 - **Guests first.** Anyone can play from a link with no account. A guest gets a device-scoped ID, and saves and scores attach to it. Signing up merges the guest's history into the account.
 - **Sign-in** with passkeys plus Apple and Google. A sign-up prompt appears after two or three games, or when someone tries to create, follow or appear on a friends leaderboard.
-- **What games see:** a per-game player ID (an HMAC of the user ID and game ID), display name, avatar URL, and whether the player is a guest. Two games cannot link the same person through the ID they receive.
+- **What games see:** a per-game player ID (an HMAC of the user ID and game ID) and whether the player is a guest. Nothing else. Names and avatars appear only in overlays the host draws. Two games cannot link the same person through the ID they receive, and Apple's 4.7.3 consent rule is never triggered.
 
 ## 2. Saves
 
-- A key-value store per (game, player), at most 64 KB in total. The host caches reads and writes them back with a version counter. Last write wins, which is enough when one player saves their own progress.
+- A key-value store per (game, player), at most 64 KB in total. That is small next to CrazyGames (1 MB) and YouTube Playables (3 MiB), but enough for feed games. The host caches reads and writes them back with a version counter. Last write wins, which is enough when one player saves their own progress.
 - Saves belong to the game and carry across its versions. A creator's edit can change what the game expects to find, so templates include a `saveVersion` field and a migration step, and the agent is told to keep it working.
-- Saves are not kept in the game's own `localStorage`. Storage in cross-site iframes is partitioned and can be evicted **[verify]**, so the host is the source of truth.
+- Saves are not kept in the game's own `localStorage`. Chrome and Firefox partition storage in cross-site iframes by top-level site, Safari may keep it in memory only, and Android WebView doesn't partition it at all. The server is therefore the source of truth, with the host caching. Guest saves merge into the account at sign-up, as CrazyGames does.
 
 ## 3. Leaderboards and asynchronous social play
 
@@ -50,9 +50,17 @@ The logic is a pure function of state and actions. That has three consequences:
 - It is the easiest model for an agent to write correctly.
 - It can run on a server as the authority, with clients predicting locally, which makes cheating hard.
 
-Rune's SDK is reported to use a similar model **[verify]**.
+Rune's SDK uses this model and shows it works in production:
+- `logic.js` defines `setup`, `actions` and an optional `update`. It "will run on every client and on Rune's servers".
+- Clients apply actions optimistically and the server validates them. Only actions travel over the network.
+- Logic must be synchronous, with no `Date` or `fetch`, and `Math.random` is made deterministic.
+- Limits: under 10 ms and 1 MB per action, state under 1 MB, at most 10 actions per player per second.
 
-Hosting options: one Cloudflare Durable Object per room, running the game's logic module in an isolate **[verify product status and limits]**, or a Node room server running logic in `isolated-vm`. A cheaper first step for friends-only party games is host-authoritative play, where one player's client runs the reducer. It is easy to cheat, which matters little among friends.
+Rules like these can be checked mechanically in code an agent writes ([Rune docs](https://developers.rune.ai/docs/how-it-works/server-side-logic), [syncing](https://developers.rune.ai/docs/how-it-works/syncing-game-state)). Playroom Kit takes the other approach: a host elected from among the players is the authority, which is simpler and easy to cheat.
+
+Hosting options:
+- **Cloudflare.** Durable Objects are production-ready: about 1,000 requests per second per object, and 30 s CPU by default, configurable to 5 minutes ([limits](https://developers.cloudflare.com/durable-objects/platform/limits/)). Workers for Platforms is built for "untrusted code written by your customers, or by AI" ([pricing](https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/platform/pricing/)). Dynamic Workers, which can block all outbound network access, has been in open beta since March 2026.
+- **A Node room server** running logic in `isolated-vm`. A cheaper first step for friends-only party games is host-authoritative play, where one player's client runs the reducer. It is easy to cheat, which matters little among friends.
 
 ## 5. Analytics
 
