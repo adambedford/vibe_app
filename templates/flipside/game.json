@@ -1,0 +1,17 @@
+{
+  "contract": 1,
+  "sdk": "1.0.0",
+  "engine": { "name": "none", "version": "0" },
+  "title": "Flipside",
+  "description": "Every tile has a letter on each side. Flip them so every row and column is a word. One puzzle a day.",
+  "orientation": "portrait",
+  "input": ["tap"],
+  "capabilities": ["saves", "scores", "events", "share"],
+  "boards": {
+    "default": { "order": "asc", "format": "duration", "period": "day" },
+    "flips": { "order": "asc", "format": "points", "period": "day" }
+  },
+  "audio": false,
+  "daily": true,
+  "template": { "id": "flipside", "version": "1" }
+}

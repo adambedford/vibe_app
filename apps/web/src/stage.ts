@@ -171,7 +171,7 @@ export class Stage {
         this.opts.onFocusChange?.(this, false); // let the feed scroll again
         break;
       case "share":
-        this.share(e.score);
+        this.share(e.score, e.text);
         break;
       case "scores.show":
         void this.showLeaderboard(e.board ?? "default");
@@ -200,11 +200,13 @@ export class Stage {
     return u.toString();
   }
 
-  private share(score?: number) {
+  /** Share a link to this game. A game may supply its own text (e.g. a spoiler-free result grid). */
+  private share(score?: number, gameText?: string) {
     const m = this.opts.entry.manifest;
     const board = m.boards?.default;
-    const text =
-      score !== undefined
+    const text = gameText?.trim()
+      ? gameText.trim()
+      : score !== undefined
         ? m.daily
           ? `I solved today's ${m.title} in ${formatScore(score, board)}. Can you beat me?`
           : `I scored ${formatScore(score, board)} in ${m.title}. Beat that!`

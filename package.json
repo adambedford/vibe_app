@@ -20,6 +20,7 @@
     "@vibe/host": "workspace:*",
     "@vibe/protocol": "workspace:*",
     "@vibe/sdk": "workspace:*",
+    "@vibe/wordkit": "workspace:*",
     "esbuild": "0.28.2",
     "phaser": "4.2.1",
     "tsx": "^4.20.0",

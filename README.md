@@ -24,6 +24,7 @@ pnpm test           # unit tests: crossword rules and puzzle pack, edge security
 pnpm typecheck
 pnpm new-game hop cat-hop "Cat Hop"     # copy a template into games/ to make a new game
 pnpm tsx templates/mini-crossword/tools/fill.ts 20   # generate crossword grids
+pnpm tsx templates/flipside/tools/make.ts 15         # generate Flipside puzzles
 ```
 
 ## What's here
@@ -36,11 +37,20 @@ packages/sdk/        `window.vibe`, the game-side SDK (3.4 KB), served from the 
 packages/host/       runs one game in a sandboxed iframe and checks every message it sends
 packages/build/      bundles a game into an immutable, content-hashed version
 packages/checks/     playtest harness: headless rule checks + browser checks
-templates/           hop (one-tap runner), dodge (drag to dodge), mini-crossword (daily 5×5)
+packages/wordkit/    word tools for word-game templates: common-word lexicon and grid filler
+templates/           hop (one-tap runner), dodge (drag to dodge), mini-crossword (daily 5×5),
+                     flipside (daily word puzzle: flip two-sided tiles so every entry is a word)
 games/               games made from templates (empty for now)
 tests/               unit tests
 docs/                design, decisions, findings
 ```
+
+## Hosted test build
+
+- Feed: https://vibe-feed-app-seven.vercel.app (Vercel login required)
+- Games: https://vibe-feed-games.vercel.app (public; game pages only load inside the feed)
+
+Both are Vercel projects built from this branch (`pnpm build && pnpm export app|games`, with `APP_ORIGIN` and `GAMES_ORIGIN` set). Games share one origin there; per-game subdomains need our own domain (decision D32).
 
 ## Read next
 
